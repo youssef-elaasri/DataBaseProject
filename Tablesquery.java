@@ -64,8 +64,8 @@ public class Tablesquery {
     }
 
 
-    void showMateriel(String categorie) throws SQLException {
-        String pre_stmt = "select * from lotmateriel where categorie = ?";
+    void showMaterielCat(String categorie) throws SQLException {
+        String pre_stmt = "select * from lotmateriel where categorie = ? order by categorie";
         PreparedStatement stmt = conn.prepareStatement(pre_stmt);
         stmt.setString(1,categorie);
         ResultSet resultSet = stmt.executeQuery();
@@ -74,6 +74,7 @@ public class Tablesquery {
         resultSet.close();
         pre_stmt = "select souscategorie from a_comme_sous_categorie where categorie = ?";
         stmt = conn.prepareStatement(pre_stmt);
+        stmt.setString(1,categorie);
         resultSet = stmt.executeQuery();
         if (!resultSet.next()) {
             stmt.close();
@@ -81,8 +82,26 @@ public class Tablesquery {
             return;
         }
         while (resultSet.next()) {
-            showMateriel(resultSet.getString(1));
+            showMaterielCat(resultSet.getString(1));
         }
+        stmt.close();
+        resultSet.close();
+    }
+    void showMaterielAct(String activity) {
+        String pre_stmt = "";
+        //TODO..
+        return;
+    }
+    /*
+    * @param option : takes true if we want to order the table by  refuge's name and dates
+    *                 takes false if we want to order the table by  refuge's name and available places
+    * */
+    void showRefuge(boolean option) throws SQLException {
+        String pre_stmt = "select email,nomrefuge, dateouverture, datefermeture, nbplacesdormir from refuge order by nomrefuge, ?";
+        PreparedStatement stmt = conn.prepareStatement(pre_stmt);
+        stmt.setString(1,option ? "dateouverture, datefermeture" : "nbplacesdormir");
+        ResultSet resultSet = stmt.executeQuery();
+        getTableData(resultSet);
         stmt.close();
         resultSet.close();
     }

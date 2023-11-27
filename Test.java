@@ -7,7 +7,8 @@ public class Test {
         Tablesquery tablesquery = new Tablesquery();
         boolean signIn = tablesquery.verifyPassword("meryemelaasri@gmail.com","ProjethBDD123");
         System.out.println(signIn);
-        tablesquery.showCourses();
+        tablesquery.showRefuge(true);
+        tablesquery.showRefuge(false);
         tablesquery.closeConnection();
     }
 }
