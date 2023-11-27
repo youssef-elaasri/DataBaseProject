@@ -28,10 +28,11 @@ dateFermeture date NOT NULL,
 nbPlacesRepas integer NOT NULL CHECK(nbPlacesRepas >= 0),
 nbPlacesDormir integer NOT NULL CHECK(nbPlacesDormir >= 0),
 texteRepresentatif varchar(450) NOT NULL,
-typePaiement varchar(30) NOT NULL CONSTRAINT Paiement CHECK (typePaiement in('espece', 'cheque', 'carte-bleue')),
+typePaiement varchar(30) NOT NULL CONSTRAINT Paiement CHECK(typePaiement in('espece', 'cheque', 'carte-bleue')),
 prixNuitee integer NOT NULL CHECK(prixNuitee >= 0),
 PRIMARY KEY(email)
 );
+
 DROP TABLE Ref_NumTel;
 CREATE TABLE Ref_NumTel (
 numTel varchar(20) NOT NULL,
@@ -88,6 +89,7 @@ idUsr INTEGER NOT NULL REFERENCES Adherent(idUsr),
 PRIMARY KEY(idReservationFormation),
 FOREIGN KEY (annee, rang) REFERENCES Formation(annee, rang)
 );
+
 CREATE TABLE Activite (
 typeActivite varchar(30) NOT NULL,
 PRIMARY KEY(typeActivite)
@@ -109,6 +111,15 @@ nbPieces integer NOT NULL CONSTRAINT nbPiecesMat CHECK (nbPieces >= 0),
 prix integer NOT NULL CONSTRAINT prixMat CHECK (prix >= 0),
 categorie varchar(30) NOT NULL REFERENCES Categorie(categorie),
 PRIMARY KEY(marque,modele,annee)
+);
+
+CREATE TABLE Utilise (
+typeActivite varchar(30) NOT NULL REFERENCES Activite(typeActivite),
+marque varchar(30) NOT NULL,
+modele varchar(30) NOT NULL,
+annee integer NOT NULL,
+PRIMARY KEY(marque,modele,annee,typeActivite),
+FOREIGN KEY (marque,modele,annee) REFERENCES LotMateriel(marque,modele,annee)
 );
 
 CREATE TABLE Texte (
@@ -190,8 +201,6 @@ INSERT INTO Refuge VALUES ('refuge3@gmail.com', 'Refuge3', 'Temara', TO_DATE('01
 INSERT INTO Ref_NumTel VALUES ('0605040203','refuge2@gmail.com');
 INSERT INTO Ref_NumTel VALUES ('0621472593','refuge3@gmail.com');
 
-/*INSERT INTO ReservationRefuge(dateResRefuge, heureResRefuge, nbNuitResRefuge, nbRepasResRefuge, prixResRefuge, email, idUsr) VALUES ( TO_DATE('2019-11-24', 'YYYY-MM-DD')*/
-
 INSERT INTO Repas VALUES ('dejeuner');
 INSERT INTO Repas VALUES ('diner');
 INSERT INTO Repas VALUES ('casse-croute');
@@ -203,45 +212,55 @@ INSERT INTO Propose VALUES ('refuge1@gmail.com', 'souper', 7);
 INSERT INTO Propose VALUES ('refuge3@gmail.com', 'casse-croute', 1);
 INSERT INTO Propose VALUES ('refuge2@gmail.com', 'dejeuner', 4);
 
-INSERT INTO Formation VALUES (2023, 1, 'ski', TO_DATE('2023-11-26', 'YYYY-MM-DD'), 15, 30, 'Formation intensive.', 100);  
-INSERT INTO Formation VALUES (2023, 2, 'randonnee', TO_DATE('2023-11-30', 'YYYY-MM-DD'), 5, 30, 'En pleine foret.', 25);  
-INSERT INTO Formation VALUES (2023, 3, 'football', TO_DATE('2023-01-26', 'YYYY-MM-DD'), 30, 11, 'Formation mixte.', 5);  
+INSERT INTO Formation VALUES (2023, 1, 'formation1', TO_DATE('2023-11-26', 'YYYY-MM-DD'), 15, 30, 'Formation intensive.', 100);  
+INSERT INTO Formation VALUES (2023, 2, 'formation2', TO_DATE('2023-11-30', 'YYYY-MM-DD'), 5, 30, 'En pleine foret.', 25);  
+INSERT INTO Formation VALUES (2023, 3, 'formation3', TO_DATE('2023-01-26', 'YYYY-MM-DD'), 30, 11, 'Formation mixte.', 5);  
 
 select * from Formation;
 
+INSERT INTO Activite VALUES ('ski');
+INSERT INTO Activite VALUES ('randonnee');
+INSERT INTO Activite VALUES ('football');
+
+INSERT INTO A_pour_activite VALUES (2023, 1, 'ski');
+INSERT INTO A_pour_activite VALUES (2023, 2, 'randonnee');
+INSERT INTO A_pour_activite VALUES (2023, 3, 'football');
+
+INSERT INTO Categorie VALUES ('categorie1');
+INSERT INTO Categorie VALUES ('categorie2');
+INSERT INTO Categorie VALUES ('categorie3');
+INSERT INTO Categorie VALUES ('categorie4');
+INSERT INTO Categorie VALUES ('categorie5');
+INSERT INTO Categorie VALUES ('categorie6');
 
 
+INSERT INTO LotMateriel VALUES ('A', 'modele 1', 2020, 15, 20,'categorie1');
+INSERT INTO LotMateriel VALUES ('B', 'modele 2', 2020, 18, 15,'categorie2');
+INSERT INTO LotMateriel VALUES ('C', 'modele 2', 2019, 20, 25,'categorie3');
+INSERT INTO LotMateriel VALUES ('D', 'modele 1', 2021, 25, 30,'categorie4');
+INSERT INTO LotMateriel VALUES ('D', 'modele 2', 2022, 30, 10,'categorie5');
+
+INSERT INTO Utilise VALUES ('ski', 'A', 'modele 1', 2020);
+INSERT INTO Utilise VALUES ('ski', 'B', 'modele 2', 2020);
+INSERT INTO Utilise VALUES ('randonnee', 'C', 'modele 2', 2019);
+INSERT INTO Utilise VALUES ('football', 'D', 'modele 1', 2021);
+INSERT INTO Utilise VALUES ('football', 'D', 'modele 2', 2022);
+
+select * FROM Utilise;
+
+INSERT INTO Texte VALUES ('Materiel dedie pour le ski','B','modele 2', 2020);
+INSERT INTO Texte VALUES ('Materiel dedie pour randonnee', 'C', 'modele 2', 2019);
 
 
+INSERT INTO A_comme_sous_categorie VALUES ('categorie1','categorie2');
+INSERT INTO A_comme_sous_categorie VALUES ('categorie1','categorie3');
+INSERT INTO A_comme_sous_categorie VALUES ('categorie2','categorie4');
+INSERT INTO A_comme_sous_categorie VALUES ('categorie1','categorie5');
 
+INSERT INTO DatePeremption Values (TO_DATE('2024-11-30', 'YYYY-MM-DD'));
+INSERT INTO DatePeremption Values (TO_DATE('2024-12-31', 'YYYY-MM-DD'));
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+INSERT INTO A_pour_datePeremption Values (TO_DATE('2024-11-30', 'YYYY-MM-DD'), 'A','modele 1', 2020);
+INSERT INTO A_pour_datePeremption Values (TO_DATE('2024-12-31', 'YYYY-MM-DD'), 'D','modele 1', 2021);
+select * from  Utilise;
+commit;
