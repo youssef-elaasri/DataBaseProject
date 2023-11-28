@@ -1,14 +1,15 @@
 import java.sql.*;
+import java.util.Date;
 import java.util.Objects;
 
 public class Tablesquery {
 
-    static final String CONN_URL = "jdbc:oracle:thin:@oracle1.ensimag.fr:1521:oracle1";
+    private static final String CONN_URL = "jdbc:oracle:thin:@oracle1.ensimag.fr:1521:oracle1";
 
-    static final String USER = "lmimouna";
-    static final String PASSWD = "lmimouna";
+    private static final String USER = "lmimouna";
+    private static final String PASSWD = "lmimouna";
 
-    private final Connection conn;
+    private Connection conn;
 
     public Tablesquery() {
         try {
@@ -24,7 +25,7 @@ public class Tablesquery {
             conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
             System.out.println("connected");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("An error occurred while connecting to the database: ");
         }
     }
 
@@ -54,57 +55,199 @@ public class Tablesquery {
         }
     }
 
-    void showCourses() throws SQLException {
-        String pre_stmt = "select * from formation order by datedemarrage, nomformation ";
-        PreparedStatement stmt = conn.prepareStatement(pre_stmt);
-        ResultSet resultSet = stmt.executeQuery();
-        getTableData(resultSet);
-        stmt.close();
-        resultSet.close();
-    }
-
-
-    void showMaterielCat(String categorie) throws SQLException {
-        String pre_stmt = "select * from lotmateriel where categorie = ? order by categorie";
-        PreparedStatement stmt = conn.prepareStatement(pre_stmt);
-        stmt.setString(1,categorie);
-        ResultSet resultSet = stmt.executeQuery();
-        getTableData(resultSet);
-        stmt.close();
-        resultSet.close();
-        pre_stmt = "select souscategorie from a_comme_sous_categorie where categorie = ?";
-        stmt = conn.prepareStatement(pre_stmt);
-        stmt.setString(1,categorie);
-        resultSet = stmt.executeQuery();
-        if (!resultSet.next()) {
+    void showCourses()  {
+        try {
+            String pre_stmt = "select distinct nomformation, apa.typeactivite, datedemarrage, dureeformation, nbplacesformation " +
+                    "from formation f " +
+                    "join a_pour_activite apa " +
+                    "on f.annee = apa.annee and f.rang = apa.rang " +
+                    "order by datedemarrage, nomformation ";
+            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
+            ResultSet resultSet = stmt.executeQuery();
+            getTableData(resultSet);
             stmt.close();
             resultSet.close();
-            return;
+        } catch (SQLException e) {
+            System.err.println("An error occurred while executing the SQL query: ");
         }
-        while (resultSet.next()) {
-            showMaterielCat(resultSet.getString(1));
+
+    }
+
+
+    void showMaterielCat(String categorie)  {
+        try {
+            String pre_stmt = "SELECT DISTINCT lm.modele, lm.marque, lm.annee, lm.categorie, lm.NBPIECES, coalesce(lm.NBPIECES -NBPIECESalouee, lm.NBPIECES ) as NBPIECESDISPO " +
+                    "from lotmateriel lm " +
+                    "left join (SELECT coalesce(SUM(NBPIECESRESERVEES),0) as NBPIECESalouee, modele as md ,marque mq ,annee an from reservationpieces group by marque,modele,annee) " +
+                    "on md = lm.modele and an = lm.annee and mq = lm.marque " +
+                    "where categorie = ? and coalesce(lm.NBPIECES -NBPIECESalouee, lm.NBPIECES ) > 0 " +
+                    "MINUS " +
+                    "(SELECT DISTINCT lm.modele, lm.marque, lm.annee, lm.categorie, lm.NBPIECES, NBPIECESDISPO " +
+                    "FROM lotmateriel lm " +
+                    "join (SELECT coalesce(SUM(NBPIECESRESERVEES),0) as NBPIECESDISPO, modele as md ,marque mq ,annee an from reservationpieces rp group by marque,modele,annee) " +
+                    "on md = lm.modele and an = lm.annee and mq = lm.marque " +
+                    "JOIN a_pour_dateperemption apd ON lm.modele = apd.modele AND lm.marque = apd.marque AND lm.annee = apd.annee " +
+                    "where apd.dateperemption < SYSDATE)";
+
+            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
+            stmt.setString(1, categorie);
+            ResultSet resultSet = stmt.executeQuery();
+            getTableData(resultSet);
+            stmt.close();
+            resultSet.close();
+            pre_stmt = "select souscategorie from a_comme_sous_categorie where categorie = ?";
+            stmt = conn.prepareStatement(pre_stmt);
+            stmt.setString(1, categorie);
+            resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                showMaterielCat(resultSet.getString(1));
+            }
+            stmt.close();
+            resultSet.close();
+        } catch (SQLException e) {
+            System.err.println("An error occurred while executing the SQL query: ");
         }
-        stmt.close();
-        resultSet.close();
     }
     void showMaterielAct(String activity) {
-        String pre_stmt = "";
-        //TODO..
-        return;
+        try {
+            String pre_stmt = "SELECT DISTINCT lm.modele, lm.marque, lm.annee " +
+                    "FROM lotmateriel lm  " +
+                    "JOIN utilise u ON lm.modele = u.modele AND lm.marque = u.marque AND lm.annee = u.annee " +
+                    "WHERE u.typeactivite = ? AND lm.nbpieces > 0 " +
+                    "MINUS " +
+                    "SELECT DISTINCT lm.modele, lm.marque, lm.annee " +
+                    "FROM lotmateriel lm " +
+                    "JOIN a_pour_dateperemption apd ON lm.modele = apd.modele AND lm.marque = apd.marque AND lm.annee = apd.annee " +
+                    "where apd.dateperemption < SYSDATE ";
+            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
+            stmt.setString(1, activity);
+            ResultSet resultSet = stmt.executeQuery();
+            getTableData(resultSet);
+            stmt.close();
+            resultSet.close();
+        } catch (SQLException e) {
+            System.err.println("An error occurred while executing the SQL query: ");
+        }
     }
     /*
     * @param option : takes true if we want to order the table by  refuge's name and dates
     *                 takes false if we want to order the table by  refuge's name and available places
     * */
-    void showRefuge(boolean option) throws SQLException {
-        String pre_stmt = "select email,nomrefuge, dateouverture, datefermeture, nbplacesdormir from refuge order by nomrefuge, ?";
-        PreparedStatement stmt = conn.prepareStatement(pre_stmt);
-        stmt.setString(1,option ? "dateouverture, datefermeture" : "nbplacesdormir");
-        ResultSet resultSet = stmt.executeQuery();
-        getTableData(resultSet);
-        stmt.close();
-        resultSet.close();
+    void showRefuge(boolean option) {
+        try {
+            String pre_stmt = "select nomrefuge, SECTEURGEO, NBPLACESREPAS, nbplacesdormir from refuge order by nomrefuge, ?";
+            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
+            stmt.setString(1, option ? "dateouverture, datefermeture" : "nbplacesdormir");
+            ResultSet resultSet = stmt.executeQuery();
+            getTableData(resultSet);
+            stmt.close();
+            resultSet.close();
+        } catch (SQLException e) {
+            System.err.println("An error occurred while executing the SQL query: ");
+        }
     }
+    void showAll(String whatToShow) {
+        try {
+            String pre_stmt = "select * from " + whatToShow;
+            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
+            ResultSet resultSet = stmt.executeQuery();
+            getTableData(resultSet);
+            stmt.close();
+            resultSet.close();
+        } catch (SQLException e) {
+            System.err.println("An error occurred while executing the SQL query: ");
+        }
+    }
+
+    void deleteAll(String EmailUsrString) throws SQLException {
+            // select the idusr
+            String pre_stmt = "select idusr from utilisateur where emailusr = ? ";
+            conn.setAutoCommit(false);
+            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
+            stmt.setString(1, EmailUsrString);
+            ResultSet resultSet = stmt.executeQuery();
+            int idusr;
+            if (resultSet.next()) idusr = resultSet.getInt(1);
+            else {
+                System.out.println("there is no such email in our database");
+                stmt.close();
+                resultSet.close();
+                return;
+            }
+            stmt.close();
+            resultSet.close();
+
+            // select the new idusr
+            pre_stmt = "select max(idusr) from compteutilisateur ";
+            conn.setAutoCommit(false);
+            stmt = conn.prepareStatement(pre_stmt);
+            resultSet = stmt.executeQuery();
+            int newIdUsr;
+            resultSet.next();
+            newIdUsr = resultSet.getInt(1) + 1;
+            stmt.close();
+            resultSet.close();
+
+            //delete all the information of the user from utilisateur
+            pre_stmt = "delete from utilisateur where emailusr = ? ";
+            stmt = conn.prepareStatement(pre_stmt);
+            stmt.setString(1, EmailUsrString);
+            stmt.executeUpdate();
+            stmt.close();
+
+            // change the idusr in reservationrefuge
+            pre_stmt = "update reservationrefuge set idusr = ? where idusr = ? ";
+            stmt = conn.prepareStatement(pre_stmt);
+            stmt.setInt(1, newIdUsr);
+            stmt.setInt(2, idusr);
+            stmt.executeUpdate();
+            stmt.close();
+
+            // change the idusr in locationmateriel
+            pre_stmt = "update locationmateriel set idusr = ? where idusr = ? ";
+            stmt = conn.prepareStatement(pre_stmt);
+            stmt.setInt(1, newIdUsr);
+            stmt.setInt(2, idusr);
+            stmt.executeUpdate();
+            stmt.close();
+
+            // change the idusr in reservationformation
+            pre_stmt = "update reservationformation set idusr = ? where idusr = ? ";
+            stmt = conn.prepareStatement(pre_stmt);
+            stmt.setInt(1, newIdUsr);
+            stmt.setInt(2, idusr);
+            stmt.executeUpdate();
+            stmt.close();
+
+            //add newIdUsr to compteutilisateur
+            pre_stmt = "insert into compteutilisateur values(?) ";
+            stmt = conn.prepareStatement(pre_stmt);
+            stmt.setInt(1, newIdUsr);
+            stmt.executeUpdate();
+            stmt.close();
+
+            //add newIdUsr to adherent
+            pre_stmt = "insert into adherent values(?) ";
+            stmt = conn.prepareStatement(pre_stmt);
+            stmt.setInt(1, newIdUsr);
+            stmt.executeUpdate();
+            stmt.close();
+
+            //delete idusr from compteutilisateur
+            pre_stmt = "delete adherent where idusr = ? ";
+            stmt = conn.prepareStatement(pre_stmt);
+            stmt.setInt(1, idusr);
+            stmt.executeUpdate();
+            stmt.close();
+
+            //delete idusr from compteutilisateur
+            pre_stmt = "delete compteutilisateur where idusr = ? ";
+            stmt = conn.prepareStatement(pre_stmt);
+            stmt.setInt(1, idusr);
+            stmt.executeUpdate();
+            stmt.close();
+    }
+
 
     static void getTableData(ResultSet resultSet) throws SQLException {
         ResultSetMetaData rsetmd = resultSet.getMetaData();
