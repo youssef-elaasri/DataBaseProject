@@ -147,7 +147,6 @@ CREATE TABLE LocationMateriel (
 idLocationMateriel INTEGER Default idLocationMatSeq.nextval,
 dateRecup DATE NOT NULL,
 dateRetour DATE NOT NULL,
-nbPiecesCasseesPerdues INTEGER NOT NULL CONSTRAINT Cassees CHECK (nbPiecesCasseesPerdues >= 0),
 sommeDue INTEGER NOT NULL CONSTRAINT Due CHECK (sommeDue >= 0),
 sommeRemboursee INTEGER NOT NULL CONSTRAINT Remboursee CHECK (sommeRemboursee >= 0),
 idUsr INTEGER NOT NULL REFERENCES Adherent(idUsr),
@@ -156,6 +155,7 @@ PRIMARY KEY (idLocationMateriel)
 
 CREATE TABLE ReservationPieces (
 nbPiecesReservees INTEGER NOT NULL CONSTRAINT nbPiecesRes CHECK (nbPiecesReservees >= 0),
+nbPiecesCasseesPerdues INTEGER NOT NULL CONSTRAINT Cassees CHECK (nbPiecesCasseesPerdues >= 0),
 marque varchar(30) NOT NULL,
 modele varchar(30) NOT NULL,
 annee integer NOT NULL,
