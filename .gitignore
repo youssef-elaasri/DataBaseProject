@@ -2,3 +2,5 @@
 .Rhistory
 DataBaseProject.iml
 ojdbc6.jar
+.bashrc
+*.class
