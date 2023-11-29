@@ -59,37 +59,57 @@ public class LocationMateriel {
                             java.sql.Date dateRecuperation,
                             java.sql.Date dateRetour ,
                             int sommeRemboursee) throws SQLException {
-        String prestmnt = "INSERT INTO LocationMateriel(dateRecup, dateRetour," +
-                "SommeDue, SommeRemboursee, idUsr) " +
-                "VALUES (?, ?, ?, ?, ?)";
-        PreparedStatement stmnt = conn.prepareStatement(prestmnt);
-        stmnt.setDate(1, dateRecuperation);
-        stmnt.setDate(2, dateRetour);
-        stmnt.setInt(3, 0);
-        stmnt.setInt(4, sommeRemboursee);
-        stmnt.setInt(5, idAdherent);
-        stmnt.execute();
-        
-        
-        prestmnt = "SELECT MAX(idLocationMateriel) FROM LocationMateriel ";
-        PreparedStatement stmt = conn.prepareStatement(prestmnt);
-        ResultSet res = stmt.executeQuery();
-        res.next();
-        int id = res.getInt(1);
 
-        for (Lot lot: nbPiecesReservees.keySet()){
-            prestmnt = "INSERT INTO ReservationPieces(nbPiecesReservees,nbPiecesCasseesPerdues," +
-                    "marque,modele,annee,IdLocationMateriel) " +
-                    "VALUES (?, ?, ?, ?, ?,?)";
-            PreparedStatement stmnt2 = conn.prepareStatement(prestmnt);
-            stmnt2.setInt(1, nbPiecesReservees.get(lot));
-            stmnt2.setInt(2, 0);
-            stmnt2.setString(3, lot.marque);
-            stmnt2.setString(4, lot.modele);
-            stmnt2.setInt(5, lot.annee);
-            stmnt2.setInt(6, id);
-            stmnt2.execute();
-        }
+        try{
+            String prestmnt = "INSERT INTO LocationMateriel(dateRecup, dateRetour," +
+                    "SommeDue, SommeRemboursee, idUsr) " +
+                    "VALUES (?, ?, ?, ?, ?)";
+            conn.setAutoCommit(false);
+            PreparedStatement stmnt = conn.prepareStatement(prestmnt);
+            stmnt.setDate(1, dateRecuperation);
+            stmnt.setDate(2, dateRetour);
+            stmnt.setInt(3, 0);
+            stmnt.setInt(4, sommeRemboursee);
+            stmnt.setInt(5, idAdherent);
+            stmnt.execute();
+            stmnt.close();
+
+
+
+            prestmnt = "SELECT MAX(idLocationMateriel) FROM LocationMateriel ";
+            PreparedStatement stmt = conn.prepareStatement(prestmnt);
+            ResultSet res = stmt.executeQuery();
+            res.next();
+            int id = res.getInt(1);
+
+            for (Lot lot: nbPiecesReservees.keySet()) {
+                prestmnt = "INSERT INTO ReservationPieces(nbPiecesReservees,nbPiecesCasseesPerdues," +
+                        "marque,modele,annee,IdLocationMateriel) " +
+                        "VALUES (?, ?, ?, ?, ?,?)";
+                conn.setAutoCommit(false);
+                PreparedStatement stmnt2 = conn.prepareStatement(prestmnt);
+                stmnt2.setInt(1, nbPiecesReservees.get(lot));
+                stmnt2.setInt(2, 0);
+                stmnt2.setString(3, lot.marque);
+                stmnt2.setString(4, lot.modele);
+                stmnt2.setInt(5, lot.annee);
+                stmnt2.setInt(6, id);
+                stmnt2.execute();
+                stmnt2.close();
+            }
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+                System.err.println("An error occurred while executing the SQL query, please try again later");
+            } catch (SQLException ex) {
+                System.err.println("An error occurred while executing the SQL query");
+            }
+        }finally {
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("An error occurred while executing the SQL query");
+            }
 
     }
 
