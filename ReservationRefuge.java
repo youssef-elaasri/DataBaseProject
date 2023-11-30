@@ -44,8 +44,6 @@ public class ReservationRefuge {
             return;
 
 
-
-
         }   catch (SQLException e) {
             System.err.println("failed");
             e.printStackTrace(System.err);

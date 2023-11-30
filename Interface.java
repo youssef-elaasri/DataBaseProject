@@ -2,6 +2,7 @@ import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 
@@ -44,7 +45,7 @@ public class Interface {
                 System.out.println("3 : Afficher nos matériels de qualité");
                 System.out.println("4 : Faire une réservation de refuge");
                 System.out.println("5 : Faire une réservation de formation");
-                System.out.println("6 : Faire une location de matériel");
+                System.out.println("6 : Faire une location de matériel ou retourner un matériel");
                 System.out.println("7 : Supprimer votre compte");
                 System.out.println("8 : Se déconnecter");
                 System.out.println("");
@@ -136,7 +137,80 @@ public class Interface {
                         showCourses();
                         break;
                     case "6":
-                        showCourses();
+                        boolean end = true;
+                        while (end) {
+                            System.out.println("");
+                            System.out.println("1 : Location de matériel");
+                            System.out.println("2 : Retour de matériel ");
+                            String option = scan.nextLine();
+                            if (option.equals("1")) {
+                                System.out.println("");
+                                System.out.println("Veuillez entrez votre ID adhérent:");
+                                String idAdherent = scan.nextLine();
+
+                                HashMap<Lot, Integer> piecesReservees = new HashMap<Lot, Integer>();
+                                System.out.println("Combien de lots vous intéressent ?");
+                                String nbLot = scan.nextLine();
+                                for (int i = 0 ; i < Integer.valueOf(nbLot) ; i++ ){
+                                    System.out.println("Le "+(i+1)+"ème de quel lot?");
+                                    System.out.println("marque :");
+                                    String marque = scan.nextLine();
+                                    System.out.println("modele :");
+                                    String modele = scan.nextLine();
+                                    System.out.println("annee :");
+                                    String annee = scan.nextLine();
+                                    Lot lot = new Lot( marque, modele, Integer.valueOf(annee));
+                                    System.out.println("Combien de pièces de ce lot ?");
+                                    String nbPieces = scan.nextLine();
+                                    piecesReservees.put(lot, Integer.valueOf(nbPieces));
+                                }
+                                System.out.println("Veuillez entrer la date de récupération:");
+                                String dateRecup = scan.nextLine();
+                                System.out.println("Veuillez entrer la date de retour:");
+                                String dateRetour = scan.nextLine();
+                                System.out.println("Combien souhaitez-vous payer comme avance? ");
+                                String sommeRemboursee = scan.nextLine();
+                                new LocationMatInterf(conn, Integer.valueOf(idAdherent), piecesReservees, dateRecup, dateRetour, Integer.valueOf(sommeRemboursee));
+                                end = false;
+                            } else if (option.equals("2")) {
+                                System.out.println("Avez-vous abîmé/perdu des pièces? ");
+                                String reponse = scan.nextLine();
+                                boolean cassee = reponse.equals("oui");;
+                                while(cassee){
+                                    System.out.println("");
+                                    System.out.println("Dequel lot?");
+                                    System.out.println("marque: ");
+                                    String marque = scan.nextLine();
+                                    System.out.println("modele: ");
+                                    String modele = scan.nextLine();
+                                    System.out.println("annee: ");
+                                    String annee = scan.nextLine();
+                                    Lot lot = new Lot(modele, marque, Integer.valueOf(annee));
+                                    System.out.println("Combien de pièce de ce lot?");
+                                    String nbPieces = scan.nextLine();
+                                    new RetourMatInterf(conn, Integer.valueOf(nbPieces), lot, getidusr(email));
+                                    System.out.println("D'autres lots? ");
+                                    reponse = scan.nextLine();
+                                    cassee = reponse.equals("oui");
+                                }    
+                                end = false;
+                            } else System.out.println("Choisissez 1 ou 2");
+                        }
+                        System.out.println("1 : Choisir une autre option");
+                        System.out.println("2 : Quitter");
+                        boolean end_ = true;
+                        while (end_){
+                            String option2 = scan.nextLine();
+                            if (option2.equals("1")){
+                                choix = scan.nextLine();
+                                break;
+                            } else if (option2.equals("2")){
+                                System.out.println("A la prochaine.");
+                                end_ = false;
+                                fin = false;
+                            }
+                        }
+
                         break;
                     case "7":
                         deleteAll(email);
