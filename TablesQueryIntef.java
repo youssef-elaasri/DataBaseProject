@@ -5,10 +5,7 @@ import java.util.Objects;
 
 
 public class TablesQueryIntef {
-
-    private static final String CONN_URL = "jdbc:oracle:thin:@oracle1.ensimag.fr:1521:oracle1";
-    private static final String USER = "lmimouna";
-    private static final String PASSWD = "lmimouna";
+    
     private Connection conn;
 
     public TablesQueryIntef(Connection conn){
