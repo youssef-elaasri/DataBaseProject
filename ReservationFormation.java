@@ -241,22 +241,23 @@ public class ReservationFormation {
     private void updateReservations() throws SQLException {
         System.out.println("Updating " + this.reservFormationAttente.size());
         for (HashMap.Entry<Integer, Integer> entry : this.reservFormationAttente.entrySet()) {
-            int idRes = entry.getKey();
-            int valeurRangAttente = entry.getValue();
-            System.out.println("RangAttente = " + valeurRangAttente);
-            valeurRangAttente--;
-            this.reservFormationAttente.put(idRes, valeurRangAttente);
-            String updtStatement = "UPDATE ReservationFormation SET rangAttente = rangAttente - 1 WHERE annee = ? AND rang = ?";
-            PreparedStatement stmt = conn.prepareStatement((updtStatement));
-            stmt.setInt(1, this.annee);
-            stmt.setInt(2, this.rang);
-            ResultSet resultSet = stmt.executeQuery();
-            if (valeurRangAttente == 0) {
-                System.out.println("idUsr = " + this.idUsr + " vous êtes passez en liste principale, merci pour votre patience.");
-                this.reservFormationAttente.remove(idRes);
+            if (entry.annee == this.annee && entry.rang == this.rang){
+                int idRes = entry.getKey();
+                int valeurRangAttente = entry.getValue();
+                System.out.println("RangAttente = " + valeurRangAttente);
+                valeurRangAttente--;
+                this.reservFormationAttente.put(idRes, valeurRangAttente);
+                String updtStatement = "UPDATE ReservationFormation SET rangAttente = rangAttente - 1 WHERE idReservationFormation = ?";
+                PreparedStatement stmt = conn.prepareStatement((updtStatement));
+                stmt.setInt(1, idRes);
+                ResultSet resultSet = stmt.executeQuery();
+                if (valeurRangAttente == 0) {
+                    System.out.println("idUsr = " + this.idUsr + " vous êtes passez en liste principale, merci pour votre patience.");
+                    this.reservFormationAttente.remove(idRes);
+                }
+                stmt.close();
+                resultSet.close();
             }
-            stmt.close();
-            resultSet.close();
         }
     }
 }
