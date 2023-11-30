@@ -3,6 +3,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.time.format.DateTimeFormatter;
+
 
 public class ReservationRefuge {
     static final String CONN_URL = "jdbc:oracle:thin:@oracle1.ensimag.fr:1521:oracle1";
@@ -13,29 +15,29 @@ public class ReservationRefuge {
 
     private Set<String> Repas = new HashSet<>(Set.of("dejeuner", "diner", "souper", "casse-croute"));
 
-    public ReservationRefuge(int idUsr,String  emailRefuge, int nuitsReserves, String ... repas  ){
+    public ReservationRefuge(int idUsr,String  emailRefuge, int nuitsReserves, String date, String ... repas ){
         try {
             // Enregistrement du driver Oracle
-            System.out.print("Loading Oracle driver... ");
+            //System.out.print("Loading Oracle driver... ");
             DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
-            System.out.println("loaded");
+            //System.out.println("loaded");
 
             // Etablissement de la connection
-            System.out.print("Connecting to the database... ");
+            //System.out.print("Connecting to the database... ");
             conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
-            System.out.println("connected");
+            //System.out.println("connected");
             int nbrRepas = repas.length;
 
             if(     verifyIdUsr(idUsr) &&
                     verifyRefuge(emailRefuge) &&
-                    verifyDate(emailRefuge) &&
+                    verifyDate(emailRefuge, date) &&
                     verifyNbrNuitsRepas(emailRefuge, nuitsReserves, nbrRepas) &&
                     verifyRepas(repas) ) {
 
                 int prix = calculPrix(emailRefuge, nuitsReserves,  repas);
 
 
-                insertQuery(nuitsReserves, nbrRepas, prix, emailRefuge, idUsr);
+                insertQuery(nuitsReserves, nbrRepas, prix, emailRefuge, idUsr, date);
 
             }
             conn.close();
@@ -50,23 +52,29 @@ public class ReservationRefuge {
         }
     }
 
-    private void insertQuery(int nuitsReserves, int nbrRepas, int prix, String email, int idUsr) throws SQLException {
+    private void insertQuery(int nuitsReserves, int nbrRepas, int prix, String email, int idUsr, String date) throws SQLException {
         if (prix == -1){
             return ;
         }
 
-        java.sql.Date today = java.sql.Date.valueOf(LocalDate.now()) ;
+        //java.sql.Date today = java.sql.Date.valueOf(LocalDate.now()) ;
         // Get the current time
         LocalTime currentTime = LocalTime.now();
 
         // Get the current hour
         int currentHour = currentTime.getHour();
 
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        java.sql.Date sqlDate = java.sql.Date.valueOf(LocalDate.parse(date, formatter)) ;
+
+
         String prestmnt = "INSERT INTO ReservationRefuge (dateResRefuge, heureResRefuge," +
                 "nbNuitResRefuge, nbRepasResRefuge, prixResRefuge, email, idUsr) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
         PreparedStatement stmnt = conn.prepareStatement(prestmnt);
-        stmnt.setDate(1, today);
+        stmnt.setDate(1, sqlDate);
         stmnt.setInt(2, currentHour);
         stmnt.setInt(3, nuitsReserves);
         stmnt.setInt(4, nbrRepas);
@@ -104,12 +112,13 @@ public class ReservationRefuge {
 
                 ResultSet resultSetRepas = stmntRepas.executeQuery();
                 if (resultSetRepas.next()) {
-                    System.out.println(resultSetRepas.getInt(1));
+                    //System.out.println(resultSetRepas.getInt(1));
 
                     prixReservationRepas += resultSetRepas.getInt(1);
                     stmntRepas.close();
                     resultSetRepas.close();
                 } else {
+
                     System.out.println("Le repas " + leRepas + " n'est pas disponible");
                     return -1;
                 }
@@ -199,21 +208,34 @@ public class ReservationRefuge {
         return false;
     }
 
-    private Boolean verifyDate(String  emailRefuge) throws SQLException {
-        LocalDate today = LocalDate.now();
+    private Boolean verifyDate(String  emailRefuge, String date) throws SQLException {
+        //LocalDate datee = date.toLocalDate();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        LocalDate localDate = LocalDate.parse(date, formatter);
 
         String preStmntDate = "SELECT dateOuverture, dateFermeture FROM Refuge WHERE email = ?";
         PreparedStatement stmntDate = conn.prepareStatement(preStmntDate);
         stmntDate.setString(1, emailRefuge);
+
 
         ResultSet result = stmntDate.executeQuery();
         if(result.next()){
 
             LocalDate ouverture = result.getDate(1).toLocalDate();
             LocalDate fermeture = result.getDate(2).toLocalDate();
+            if(fermeture.isBefore(ouverture)) fermeture = fermeture.plusYears(1);
+
+            System.out.println(localDate.isAfter(ouverture));
+            System.out.println(localDate.isBefore(fermeture));
+
+            System.out.println(localDate);
+
+
+
             stmntDate.close();
             result.close();
-            return today.isAfter(ouverture) && today.isBefore(fermeture); //TODO no such example
+            return localDate.isAfter(ouverture) && localDate.isBefore(fermeture); //TODO no such example
         }
 
         return false;
@@ -227,7 +249,7 @@ public class ReservationRefuge {
         }
         return true;
     }
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
         new ReservationRefuge(1, "refuge1@gmail.com", 1, "diner", "diner", "souper");
-    }
+    }*/
 }

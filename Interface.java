@@ -1,4 +1,6 @@
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Scanner;
 
 
@@ -90,6 +92,21 @@ public class Interface {
                                 s = false;
                             } else System.out.println("Choisissez 1 ou 2");
                         }
+                        System.out.println("1 : Choisir une autre option");
+                        System.out.println("2 : Quitter");
+                        boolean ss = true;
+                        while (ss){
+                            String option2 = scan.nextLine();
+                            if (option2.equals("1")){
+                                choix = scan.nextLine();
+                                break;
+                            } else if (option2.equals("2")){
+                                System.out.println("A la prochaine.");
+                                ss = false;
+                                fin = false;
+                            }
+                        }
+
                         break;
                     case "4":
                         System.out.println("Veuillez entrez l'email du refuge que vous voulez:");
@@ -98,9 +115,16 @@ public class Interface {
                         String id = scan.nextLine();
                         System.out.println("Veuillez entrez le nombre de nuitées:");
                         String nuits = scan.nextLine();
-                        System.out.println("Veuillez entre le repas que vous voulez:");
+                        System.out.println("Veuillez entrez le repas que vous voulez, si vous ne voulez aucun repas tapez sur Entrer:");
                         String repas = scan.nextLine();
-                        new ReservationRefuge (Integer.valueOf(id),emailRef, Integer.valueOf(nuits),repas);
+
+
+
+                        String[] rep = {"diner"};
+                        rep[0] = "diner";
+                        System.out.println("Veuillez entrez la date de réservation sous la forme YYYY-MM-DD:");
+                        String date = scan.nextLine();
+                        new ReservationRefuge (Integer.valueOf(id),emailRef, Integer.valueOf(nuits),date,repas);
                         break;
                     case "5":
                         showCourses();
@@ -111,6 +135,7 @@ public class Interface {
                     case "7":
                         deleteAll(email);
                         System.out.println("Votre compte a été supprimé avec succès.");
+                        System.out.println("A la prochaine.");
                         fin = false;
                         break;
                     case "8":
@@ -126,7 +151,7 @@ public class Interface {
 
 
 
-        } catch (SQLException e) {
+        } catch (SQLException | ParseException e) {
             throw new RuntimeException(e);
         }
 
