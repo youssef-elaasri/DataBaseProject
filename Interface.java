@@ -111,8 +111,6 @@ public class Interface {
                     case "4":
                         System.out.println("Veuillez entrez l'email du refuge que vous voulez:");
                         String emailRef = scan.nextLine();
-                        System.out.println("Veuillez entrez votre ID utilisateur:");
-                        String id = scan.nextLine();
                         System.out.println("Veuillez entrez le nombre de nuitées:");
                         String nuits = scan.nextLine();
                         System.out.println("Veuillez entrez le repas que vous voulez, si vous ne voulez aucun repas tapez sur Entrer:");
@@ -124,7 +122,7 @@ public class Interface {
                         rep[0] = "diner";
                         System.out.println("Veuillez entrez la date de réservation sous la forme YYYY-MM-DD:");
                         String date = scan.nextLine();
-                        new ReservationRefuge (Integer.valueOf(id),emailRef, Integer.valueOf(nuits),date,repas);
+                        new ReservationRefuge (getidusr(email),emailRef, Integer.valueOf(nuits),date,repas);
                         break;
                     case "5":
                         showCourses();
@@ -151,7 +149,7 @@ public class Interface {
 
 
 
-        } catch (SQLException | ParseException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
