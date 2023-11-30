@@ -145,9 +145,6 @@ public class Interface {
                             String option = scan.nextLine();
                             if (option.equals("1")) {
                                 System.out.println("");
-                                System.out.println("Veuillez entrez votre ID adhérent:");
-                                String idAdherent = scan.nextLine();
-
                                 HashMap<Lot, Integer> piecesReservees = new HashMap<Lot, Integer>();
                                 System.out.println("Combien de lots vous intéressent ?");
                                 String nbLot = scan.nextLine();
@@ -170,7 +167,7 @@ public class Interface {
                                 String dateRetour = scan.nextLine();
                                 System.out.println("Combien souhaitez-vous payer comme avance? ");
                                 String sommeRemboursee = scan.nextLine();
-                                new LocationMatInterf(conn, Integer.valueOf(idAdherent), piecesReservees, dateRecup, dateRetour, Integer.valueOf(sommeRemboursee));
+                                new LocationMatInterf(conn, getidusr(email), piecesReservees, dateRecup, dateRetour, Integer.valueOf(sommeRemboursee));
                                 end = false;
                             } else if (option.equals("2")) {
                                 System.out.println("Avez-vous abîmé/perdu des pièces? ");
