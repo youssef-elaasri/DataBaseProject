@@ -12,5 +12,16 @@ public class Test {
         tablesquery.closeConnection();
     }
 }
-
-
+/* test for Res Formation
+public class Test {
+    public static void main(String[] args) throws SQLException {
+        Formation Formation1 = new Formation(2023,1);
+        Formation Formation2 = new Formation(2023,2);
+        Formation Formation3 = new Formation(2023,3);
+        new ReservationFormation(3,Formation2);
+        ReservationFormation Res1 = new ReservationFormation(3,Formation3);
+        new ReservationFormation(4,Formation2);
+        new ReservationFormation(4,Formation3); //liste d'attente : 1
+        Res1.AnnulationResFormation();
+    }
+}*/
