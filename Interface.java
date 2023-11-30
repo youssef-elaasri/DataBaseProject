@@ -371,4 +371,40 @@ public class Interface {
     public static void main(String[] args){
         Interface inter = new Interface();
     }
+
+    private int getidusr(String EmailUsrString) {
+        try {
+            // select the idusr
+            conn.setAutoCommit(false);
+            String pre_stmt = "select idusr from utilisateur where emailusr = ? ";
+            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
+            stmt.setString(1, EmailUsrString);
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.next()) {
+                int idusr = resultSet.getInt(1);
+                stmt.close();
+                resultSet.close();
+                return idusr;
+            }
+            else {
+                System.out.println("there is no such email in our database");
+                stmt.close();
+                resultSet.close();
+            }
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+                System.err.println("An error occurred while executing the SQL query, please try again later");
+            } catch (SQLException ex) {
+                System.err.println("An error occurred while executing the SQL query");
+            }
+        } finally {
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("An error occurred while executing the SQL query");
+            }
+        }
+        return -1;
+    }
 }

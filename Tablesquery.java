@@ -162,8 +162,8 @@ public class Tablesquery {
     void deleteAll(String EmailUsrString) throws SQLException {
         try {
             // select the idusr
-            String pre_stmt = "select idusr from utilisateur where emailusr = ? ";
             conn.setAutoCommit(false);
+            String pre_stmt = "select idusr from utilisateur where emailusr = ? ";
             PreparedStatement stmt = conn.prepareStatement(pre_stmt);
             stmt.setString(1, EmailUsrString);
             ResultSet resultSet = stmt.executeQuery();
@@ -252,7 +252,6 @@ public class Tablesquery {
             try {
                 conn.rollback();
                 System.err.println("An error occurred while executing the SQL query, please try again later");
-                System.err.println(e.getMessage());
             } catch (SQLException ex) {
                 System.err.println("An error occurred while executing the SQL query");
             }
