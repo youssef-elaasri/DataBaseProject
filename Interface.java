@@ -1,6 +1,7 @@
 import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 
@@ -113,16 +114,23 @@ public class Interface {
                         String emailRef = scan.nextLine();
                         System.out.println("Veuillez entrez le nombre de nuitées:");
                         String nuits = scan.nextLine();
-                        System.out.println("Veuillez entrez le repas que vous voulez, si vous ne voulez aucun repas tapez sur Entrer:");
-                        String repas = scan.nextLine();
+
+                        ArrayList<String> listeDeRepas = new ArrayList<>();
+
+                        while(true){
+                            System.out.println("Veuillez ajoutez un repas que vous voulez, si vous ne voulez pas de repas appuyez sur Entrer:");
+                            String repas = scan.nextLine();
+                            if(repas.equals("")){
+                                break;
+                            }
+                            listeDeRepas.add(repas);
+                        }
 
 
 
-                        String[] rep = {"diner"};
-                        rep[0] = "diner";
                         System.out.println("Veuillez entrez la date de réservation sous la forme YYYY-MM-DD:");
                         String date = scan.nextLine();
-                        new ReservationRefuge (getidusr(email),emailRef, Integer.valueOf(nuits),date,repas);
+                        new ReservationRefuge (getidusr(email),emailRef, Integer.valueOf(nuits),date,listeDeRepas.toArray(new String[0]));
                         break;
                     case "5":
                         showCourses();
