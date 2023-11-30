@@ -40,7 +40,6 @@ email varchar(40) NOT NULL REFERENCES Refuge(email),
 PRIMARY KEY(numTel)
 );
 
-Create Sequence idResRefSeq;
 CREATE TABLE ReservationRefuge (
 idResRefuge INTEGER Default idResRefSeq.nextval,
 dateResRefuge DATE NOT NULL,

@@ -1,10 +1,25 @@
 public class Formation {
-    public int annee;
-    public int rang;
+    private int annee;
+    private int rang;
+    private int idRes;
+
 
     public Formation(int annee, int rang) {
         this.annee = annee;
         this.rang = rang;
+        this.idRes = 0;
+    }
+
+    public int getAnnee(){
+        return this.annee;
+    }
+
+    public int getRang(){
+        return this.rang;
+    }
+
+    public void setIdRes(int idRes){
+        this.idRes = idRes;
     }
 
     @Override
