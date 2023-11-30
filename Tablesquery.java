@@ -196,6 +196,20 @@ public class Tablesquery {
             stmt.executeUpdate();
             stmt.close();
 
+            //add newIdUsr to compteutilisateur
+            pre_stmt = "insert into compteutilisateur values(?) ";
+            stmt = conn.prepareStatement(pre_stmt);
+            stmt.setInt(1, newIdUsr);
+            stmt.executeUpdate();
+            stmt.close();
+
+            //add newIdUsr to adherent
+            pre_stmt = "insert into adherent values(?) ";
+            stmt = conn.prepareStatement(pre_stmt);
+            stmt.setInt(1, newIdUsr);
+            stmt.executeUpdate();
+            stmt.close();
+
             // change the idusr in reservationrefuge
             pre_stmt = "update reservationrefuge set idusr = ? where idusr = ? ";
             stmt = conn.prepareStatement(pre_stmt);
@@ -220,21 +234,7 @@ public class Tablesquery {
             stmt.executeUpdate();
             stmt.close();
 
-            //add newIdUsr to compteutilisateur
-            pre_stmt = "insert into compteutilisateur values(?) ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setInt(1, newIdUsr);
-            stmt.executeUpdate();
-            stmt.close();
-
-            //add newIdUsr to adherent
-            pre_stmt = "insert into adherent values(?) ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setInt(1, newIdUsr);
-            stmt.executeUpdate();
-            stmt.close();
-
-            //delete idusr from compteutilisateur
+            //delete idusr from agherent
             pre_stmt = "delete adherent where idusr = ? ";
             stmt = conn.prepareStatement(pre_stmt);
             stmt.setInt(1, idusr);
@@ -247,10 +247,12 @@ public class Tablesquery {
             stmt.setInt(1, idusr);
             stmt.executeUpdate();
             stmt.close();
+
         } catch (SQLException e) {
             try {
                 conn.rollback();
                 System.err.println("An error occurred while executing the SQL query, please try again later");
+                System.err.println(e.getMessage());
             } catch (SQLException ex) {
                 System.err.println("An error occurred while executing the SQL query");
             }
