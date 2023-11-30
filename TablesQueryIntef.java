@@ -225,10 +225,18 @@ public class TablesQueryIntef {
 
     static void getTableData(ResultSet resultSet) throws SQLException {
         ResultSetMetaData rsetmd = resultSet.getMetaData();
-        int lenghtColum = rsetmd.getColumnCount();
+        int columnCount = rsetmd.getColumnCount();
+    
+        // Affichage des noms de colonnes avec une largeur fixe
+        for (int i = 1; i <= columnCount; i++) {
+            System.out.printf("%-20s", rsetmd.getColumnName(i));
+        }
+        System.out.println();
+    
+        // Affichage des lignes de données avec une largeur fixe
         while (resultSet.next()) {
-            for (int j = 1; j <= lenghtColum; j++) {
-                System.out.print(resultSet.getString(j) + "\t");
+            for (int j = 1; j <= columnCount; j++) {
+                System.out.printf("%-20s", resultSet.getString(j));
             }
             System.out.println();
         }
