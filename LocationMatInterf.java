@@ -43,7 +43,7 @@ public class LocationMatInterf {
                 return;
             }
             if (!verifDateRecup(dateRecuperation)) {
-                System.out.println("Date de récupéération invalide!");
+                System.out.println("Date de récupération invalide!");
                 return;
             }
             if (!verifDateRetour(dateRecuperation, dateRetour)) {
@@ -51,7 +51,7 @@ public class LocationMatInterf {
                 return;
             }
             if (!verifdisponibilite(dateRecuperation, dateRetour, nbPiecesReservees)) {
-                System.out.println("Ce lot n'est pas disponible!");
+                System.out.println("Réservation refusée, pas assez de pièces disponibles.");
                 return;
             }
             String prestmnt = "INSERT INTO LocationMateriel(dateRecup, dateRetour," +
@@ -168,7 +168,6 @@ public class LocationMatInterf {
             Lot lot = new Lot(modele, marque, annee);
             if (nbPiecesReservees.containsKey(lot)) {
                 if (nbPiecesReservees.get(lot) > dispo) {
-                    System.out.println("Réservation refusée, pas assez de pièces disponibles.");
                     stmt.close();
                     resultSet.close();
                     return false;
