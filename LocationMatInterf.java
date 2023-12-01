@@ -53,14 +53,13 @@ public class LocationMatInterf {
                 return;
             }
             String prestmnt = "INSERT INTO LocationMateriel(dateRecup, dateRetour," +
-                    "SommeDue, idUsr) " +
-                    "VALUES (?, ?, ?, ?)";
+                    "idUsr) " +
+                    "VALUES (?, ?, ?)";
             conn.setAutoCommit(false);
             PreparedStatement stmnt = conn.prepareStatement(prestmnt);
             stmnt.setDate(1, dateRecuperation);
             stmnt.setDate(2, dateRetour);
-            stmnt.setInt(3, 0);
-            stmnt.setInt(4, idAdherent);
+            stmnt.setInt(3, idAdherent);
             stmnt.execute();
             stmnt.close();
 
@@ -69,7 +68,6 @@ public class LocationMatInterf {
             ResultSet res = stmt.executeQuery();
             res.next();
             int id = res.getInt(1);
-            System.out.println("id = "+ id);
 
             for (Lot lot : nbPiecesReservees.keySet()) {
                 prestmnt = "INSERT INTO ReservationPieces(nbPiecesReservees,nbPiecesCasseesPerdues," +
@@ -104,6 +102,9 @@ public class LocationMatInterf {
         }
     }
 
+    private int calculPrix(){
+
+    }
 
 
     private boolean verifIdAdherent ( int idAdherent) throws SQLException {

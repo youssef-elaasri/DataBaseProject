@@ -21,14 +21,14 @@ public class ReservationFormation {
         this.rang = formation.getRang();
         try {
             // Enregistrement du driver Oracle
-            System.out.print("Loading Oracle driver... ");
+            //System.out.print("Loading Oracle driver... ");
             DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
-            System.out.println("loaded");
+            //System.out.println("loaded");
 
             // Etablissement de la connection
-            System.out.print("Connecting to the database... ");
+            //System.out.print("Connecting to the database... ");
             conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
-            System.out.println("connected");
+            //System.out.println("connected");
             this.InitResAttente();
             this.InitIdRes();
             if( verifyAdherent(idUsr) && verifyFormation(this.annee, this.rang) ) {
@@ -120,7 +120,7 @@ public class ReservationFormation {
         stmnt.setInt(3, anneeFormation);
         stmnt.setInt(4, rangFormation);
         stmnt.setInt(5, idUsr);
-        System.out.println("before inserting : idRes = " + this.idRes);
+        System.out.println("La réservation a bien été prise en compte. idRes = " + this.idRes);
         stmnt.execute();
         String priceStatement = "UPDATE Utilisateur SET SommeDue = SommeDue + ? WHERE idUSr = ?";
         PreparedStatement stmtPrice = conn.prepareStatement(priceStatement);
@@ -176,7 +176,7 @@ public class ReservationFormation {
         }
         stmnt.close();
         result.close();
-        System.out.println("La formation dont l'annee est " + anneeFormation + " et le rang est " + rangFormation + " n'est pas disponible.");
+        System.out.println("La formation dont l'année est " + anneeFormation + " et le rang est " + rangFormation + " n'est pas disponible.");
         return false;
     }
 

@@ -95,6 +95,7 @@ public class ReservationFormationX {
             ResultSet resultSetPrice = stmtPrice.executeQuery();
             stmtPrice.close();
             resultSetPrice.close();
+            System.out.println("L'annulation a été bien prise en compte.");
             this.updateReservations(idUsr, annee, rang);
         } else {
             System.out.println("L'annulation de cette réservation n'est pas possible.");
