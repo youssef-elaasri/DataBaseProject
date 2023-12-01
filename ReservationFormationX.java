@@ -8,17 +8,31 @@ public class ReservationFormationX {
 
     private Connection conn;
     private int idRes;
+    private int annee;
+    private int rang;
     private HashMap<Integer,Integer> reservFormationAttente;
 
-    public ReservationFormationX(Connection conn, int idRes, int idUsr, Formation formation){
+    public ReservationFormationX(Connection conn, int idRes, int idUsr){
         this.conn = conn;
         this.idRes = idRes;
-        int annee = formation.getAnnee();
-        int rang = formation.getRang();
+
         try {
-            if (verifyAdherent(idUsr)) {
-                this.InitResAttente(annee, rang);
+            String resStatement = "SELECT * FROM ReservationFormation WHERE idReservationFormation = ?";
+            PreparedStatement resstmnt = conn.prepareStatement(resStatement);
+            resstmnt.setInt(1, this.idRes);
+            ResultSet resultRes = resstmnt.executeQuery();
+
+            if (resultRes.next()) {
+                int annee = resultRes.getInt("annee");
+                int rang = resultRes.getInt("rang");
+                this.annee = annee;
+                this.rang = rang;
+                if (verifyAdherent(idUsr)) {
+                    this.InitResAttente(annee, rang);
+                }
             }
+            resstmnt.close();
+            resultRes.close();
             return;
         }   catch (SQLException e) {
             System.err.println("failed");
@@ -28,18 +42,18 @@ public class ReservationFormationX {
 
     private void InitResAttente(int annee, int rang) throws SQLException {
         this.reservFormationAttente = new HashMap<Integer, Integer>();
-        String nbResStatement = "SELECT * FROM ReservationFormation WHERE annee = ? AND rang = ? AND rangAttente >= 1";
-        PreparedStatement stmnt = conn.prepareStatement(nbResStatement);
-        stmnt.setInt(1, annee);
-        stmnt.setInt(2, rang);
-        ResultSet result = stmnt.executeQuery();
+        String initResStatement = "SELECT * FROM ReservationFormation WHERE annee = ? AND rang = ? AND rangAttente >= 1";
+        PreparedStatement initResstmnt = conn.prepareStatement(initResStatement);
+        initResstmnt.setInt(1, annee);
+        initResstmnt.setInt(2, rang);
+        ResultSet result = initResstmnt.executeQuery();
 
         while (result.next()) {
             int retrievedIdRes = result.getInt("idReservationFormation");
             int retrievedRangAttente = result.getInt("rangAttente");
             this.reservFormationAttente.put(retrievedIdRes, retrievedRangAttente);
         }
-        stmnt.close();
+        initResstmnt.close();
         result.close();
     }
     private int CalculNbRes() throws SQLException {
@@ -55,8 +69,7 @@ public class ReservationFormationX {
         result.close();
         return res;
     }
-    public void AnnulationResFormation(int idUsr, int annee, int rang) throws SQLException {
-        InitResAttente(annee, rang);
+    public void AnnulationResFormation(int idUsr) throws SQLException {
         int nbRes = this.CalculNbRes();
         if (nbRes > 0) {
             String deleteStatement = "DELETE FROM ReservationFormation WHERE idReservationFormation = ?";
@@ -72,8 +85,8 @@ public class ReservationFormationX {
             ResultSet resultSetPrice = stmtPrice.executeQuery();
             stmtPrice.close();
             resultSetPrice.close();
-            System.out.println("L'annulation a été bien prise en compte.");
             this.updateReservations(idUsr, annee, rang);
+            System.out.println("L'annulation a été bien prise en compte.");
         } else {
             System.out.println("L'annulation de cette réservation n'est pas possible.");
         }
@@ -128,10 +141,11 @@ public class ReservationFormationX {
             }
             stmt.close();
             resultSet.close();
-            String preInsertstmnt = "INSERT INTO Message(message, idUsr) VALUES (?, ?)";
+            String preInsertstmnt = "INSERT INTO Message(message, idUsr, idReservationFormation) VALUES (?, ?)";
             PreparedStatement stmntInsert = conn.prepareStatement(preInsertstmnt);
             stmntInsert.setString(1, message);
             stmntInsert.setInt(2, idUsr);
+            stmntInsert.setInt(3, idRes);
             stmntInsert.execute();
             stmntInsert.close();
         }
