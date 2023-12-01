@@ -332,6 +332,10 @@ public class Interface {
                         checkPrep.setInt(1,query.getidusr(email));
                         ResultSet checkRes = checkPrep.executeQuery();
                         TablesQueryIntef.getTableData(checkRes);
+                        String delStatement = "DELETE FROM Message WHERE idUsr = ?"; //on vide la messagerie après la lecture.
+                        PreparedStatement delPrep = inter.getConnection().prepareStatement(delStatement);
+                        delPrep.setInt(1,query.getidusr(email));
+                        delPrep.executeQuery();
                         connecte = autreOptions(scan);
                         break;
 
