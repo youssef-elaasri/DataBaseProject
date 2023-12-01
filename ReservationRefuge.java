@@ -39,6 +39,7 @@ public class ReservationRefuge {
 
             // Number of reserved meals
             int nbrRepas = repas.length;
+<<<<<<< HEAD
 
             // Verifying conditions before making the reservation
             if (verifyIdUsr(idUsr) &&
@@ -55,6 +56,36 @@ public class ReservationRefuge {
             }
 
             // Closing the connection
+=======
+            System.out.println("1");
+            if(!verifyIdUsr(idUsr)){
+                System.out.println("L'identifiant " + idUsr + " n'existe pas");
+                return;
+            }
+            System.out.println("2");
+            if(!verifyRefuge(emailRefuge)){
+                System.out.println("Le refuge dont l'email est " + emailRefuge + " n'existe pas");
+                return;
+            }
+            System.out.println("3");
+            if(!verifyDate(emailRefuge, date)){
+                System.err.println("Le refuge sera fermé à cette date :(");
+                return;
+            }
+            System.out.println("4");
+            if(!verifyNbrNuitsRepas(emailRefuge, nuitsReserves, nbrRepas)){
+                return;
+            }
+            System.out.println("5");
+            if(!verifyRepas(repas)){
+                System.out.println("Un repas n'est pas valide!");
+                return;
+            }
+            System.out.println("6");
+            int prix = calculPrix(emailRefuge, nuitsReserves,  repas);
+            insertQuery(nuitsReserves, nbrRepas, prix, emailRefuge, idUsr, date);
+
+>>>>>>> main
             conn.close();
             return;
 
@@ -230,7 +261,10 @@ public class ReservationRefuge {
                 result.close();
                 return true;
             }
+<<<<<<< HEAD
             System.out.println("cet ID " + idUsr + " N'existe pas");
+=======
+>>>>>>> main
         }
 
         stmt.close();
@@ -257,7 +291,10 @@ public class ReservationRefuge {
                 result.close();
                 return true;
             }
+<<<<<<< HEAD
             System.out.println("Le refuge dont l'email est " + emailRefuge + " n'existe pas");
+=======
+>>>>>>> main
         }
         return false;
     }
@@ -337,9 +374,13 @@ public class ReservationRefuge {
         if (result.next()) {
             LocalDate ouverture = result.getDate(1).toLocalDate();
             LocalDate fermeture = result.getDate(2).toLocalDate();
+<<<<<<< HEAD
             if (fermeture.isBefore(ouverture)) fermeture = fermeture.plusYears(1);
 
             // Check if the reservation date is within the valid range
+=======
+            if(fermeture.isBefore(ouverture)) fermeture = fermeture.plusYears(1);
+>>>>>>> main
             stmntDate.close();
             result.close();
             return localDate.isAfter(ouverture) && localDate.plusDays(nbrNuits).isBefore(fermeture);
@@ -347,6 +388,7 @@ public class ReservationRefuge {
 
         return false;
     }
+<<<<<<< HEAD
 
     /**
      * Verifies the validity of the reserved meals.
@@ -358,6 +400,11 @@ public class ReservationRefuge {
         for (String unRepas : repas) {
             if (!Repas.contains(unRepas)) {
                 System.out.println("Le repas " + unRepas + " n'est pas valide");
+=======
+    private Boolean verifyRepas(String ... repas){
+        for (String unRepas : repas){
+            if(!Repas.contains(unRepas)){
+>>>>>>> main
                 return false;
             }
         }

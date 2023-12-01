@@ -12,7 +12,9 @@ public class Interface {
     static final String PASSWD = "lmimouna";
     private Connection conn;
 
-
+    /*
+     * Etabissement de la connexion
+     */
     public Interface() {
         try {
             // Enregistrement du driver Oracle
@@ -25,35 +27,114 @@ public class Interface {
             System.out.print("Connecting to the database... ");
             conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
             System.out.println("connected");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /*
+     * Récuperer la connexion
+     */
+    public Connection getConnection(){
+        return this.conn;
+    }
+
+    /*
+    * Afficher les options
+    */
+    private static void printOptions(){
+        System.out.println("Veuillez choisir l'une des options suivantes:");
+        System.out.println("1 : Afficher nos magnifiques refuges");
+        System.out.println("2 : Afficher nos formations polyvalentes");
+        System.out.println("3 : Afficher nos matériels de qualité");
+        System.out.println("4 : Faire une réservation de refuge");
+        System.out.println("5 : Faire une réservation de formation ou annulation");
+        System.out.println("6 : Faire une location de matériel ou retourner un matériel");
+        System.out.println("7 : Supprimer votre compte");
+        System.out.println("8 : Se déconnecter");
+        System.out.println("");
+    }
+
+    /*
+     * Récupérer l'email de l'utilisateur
+     */
+    private static String emailUtilisateur(Scanner scan){
+        System.out.println("Veuillez entrez votre e-mail:");
+        return scan.nextLine();
+    }
+
+    /*
+     * Récupérer le mot de passe de l'utilisateur
+     */
+    private static String pwdUtilisateur(Scanner scan){
+        System.out.println("Veuillez entrez votre mot de passe:");
+        return scan.nextLine();
+    }
+
+    /*
+     * Récupérer la marque du lot de matériel
+     */
+    private static String getMarque(Scanner scan){
+        System.out.println("marque :");
+        return scan.nextLine();
+    }
+
+    /*
+     * Récupérer le modèle du lot de matériel
+     */
+    private static String getModele(Scanner scan){
+        System.out.println("modele :");
+        return scan.nextLine();
+    }
+
+    /*
+     * Récupérer l'année du lot de matériel
+     */
+    private static String getAnnee(Scanner scan){
+        System.out.println("annee :");
+        return scan.nextLine();
+    }
+
+    private static boolean autreOptions(Scanner scan) {
+        System.out.println("");
+        System.out.println("1 : Choisir une autre option");
+        System.out.println("2 : Se déconnecter");
+        boolean choix4 = true;
+        while (choix4) {
+            String option2 = scan.nextLine();
+            if (option2.equals("1")) { //Choisir une autre option
+                printOptions();
+                break;
+            } else if (option2.equals("2")) { //Quitter
+                System.out.println("A la prochaine.");
+                choix4 = false;
+                return false;
+            }
+        }
+        return true;
+    }
+    public static void main(String[] args) throws SQLException {
+        // Se connecter à oracle
+        Interface inter = new Interface();
+        Scanner scan = new Scanner(System.in);
 
 
-            Scanner scan = new Scanner(System.in);
+        // Connexion de l'utilisateur
+        String email = emailUtilisateur(scan);
+        String pwd = pwdUtilisateur(scan);
 
+        TablesQueryIntef query = new TablesQueryIntef(inter.getConnection());
+        if (query.verifyPassword(email, pwd)) {
+            System.out.println("Vous êtes connectés :)");
 
-            // Connexion
-            System.out.println("Veuillez entrez votre e-mail:");
-            String email = scan.nextLine();
-            System.out.println("Veuillez entrez votre mot de passe:");
-            String pwd = scan.nextLine();
-            if (verifyPassword(email,pwd)){
-                System.out.println("Vous êtes connectés :)");
+            // Afficher à l'utilisateur les options
+            printOptions();
 
-                // Demander à l'utilisateur
-                System.out.println("Veuillez choisir l'une des options suivantes:");
-                System.out.println("1 : Afficher nos magnifiques refuges");
-                System.out.println("2 : Afficher nos formations polyvalentes");
-                System.out.println("3 : Afficher nos matériels de qualité");
-                System.out.println("4 : Faire une réservation de refuge");
-                System.out.println("5 : Faire une réservation de formation");
-                System.out.println("6 : Faire une location de matériel ou retourner un matériel");
-                System.out.println("7 : Supprimer votre compte");
-                System.out.println("8 : Se déconnecter");
-                System.out.println("");
-                boolean fin = true;
-                while (fin){
+            boolean connecte = true;
+            while (connecte) {
                 String choix = scan.nextLine();
                 switch (choix) {
-                    case "1":
+                    case "1": //Afficher les refuges
                         System.out.println("");
                         System.out.println("1 : Par dates");
                         System.out.println("2 : Par disponibilités");
@@ -62,17 +143,22 @@ public class Interface {
                         while (c) {
                             String option = scan.nextLine();
                             if (option.equals("1")) {
-                                showRefuge(true);
+                                query.showRefuge(true);
                                 c = false;
                             } else if (option.equals("2")) {
-                                showRefuge(false);
+                                query.showRefuge(false);
                                 c = false;
                             } else System.out.println("Choisissez 1 ou 2");
                         }
+
+                        connecte = autreOptions(scan);
                         break;
-                    case "2":
-                        showCourses();
+
+                    case "2": //Afficher les formations
+                        query.showCourses();
+                        connecte = autreOptions(scan);
                         break;
+
                     case "3":
                         boolean s = true;
                         while (s) {
@@ -84,79 +170,102 @@ public class Interface {
                                 System.out.println("");
                                 System.out.println("Veuillez entrez la catégorie qui vous intéresse:");
                                 String cat = scan.nextLine();
-                                showMaterielCat(cat);
+                                query.showMaterielCat(cat);
                                 s = false;
                             } else if (option.equals("2")) {
                                 System.out.println("");
                                 System.out.println("Veuillez entrez l'activité qui vous intéresse:");
                                 String act = scan.nextLine();
-                                showMaterielAct(act);
+                                query.showMaterielAct(act);
                                 s = false;
                             } else System.out.println("Choisissez 1 ou 2");
                         }
-                        System.out.println("1 : Choisir une autre option");
-                        System.out.println("2 : Quitter");
-                        boolean ss = true;
-                        while (ss){
-                            String option2 = scan.nextLine();
-                            if (option2.equals("1")){
-                                choix = scan.nextLine();
-                                break;
-                            } else if (option2.equals("2")){
-                                System.out.println("A la prochaine.");
-                                ss = false;
-                                fin = false;
-                            }
-                        }
-
+                        connecte = autreOptions(scan);
                         break;
+
                     case "4":
                         System.out.println("Veuillez entrez l'email du refuge que vous voulez:");
                         String emailRef = scan.nextLine();
                         System.out.println("Veuillez entrez le nombre de nuitées:");
                         String nuits = scan.nextLine();
-
                         ArrayList<String> listeDeRepas = new ArrayList<>();
-
-                        while(true){
-                            System.out.println("Veuillez ajoutez un repas que vous voulez, si vous ne voulez pas de repas appuyez sur Entrer:");
+                        System.out.println("Veuillez ajoutez le ou les repas que vous voulez.");
+                        System.out.println("Si vouz voulez plus d'un repas, tapez Entrer après chaque repas.");
+                        System.out.println("si vous ne voulez pas de repas appuyez sur Entrer.");
+                        while (true) {
                             String repas = scan.nextLine();
-                            if(repas.equals("")){
+                            if (repas.equals("")) {
                                 break;
                             }
                             listeDeRepas.add(repas);
                         }
-
-
-
                         System.out.println("Veuillez entrez la date de réservation sous la forme YYYY-MM-DD:");
                         String date = scan.nextLine();
-                        new ReservationRefuge (getidusr(email),emailRef, Integer.valueOf(nuits),date,listeDeRepas.toArray(new String[0]));
+                        new ReservationRefuge(query.getidusr(email), emailRef, Integer.valueOf(nuits), date, listeDeRepas.toArray(new String[0]));
+                        connecte = autreOptions(scan);
                         break;
-                    case "5":
-                        showCourses();
+
+                    case "5": //Réservation/Annulation formation
+                        System.out.println("");
+                        System.out.println("1 : Réservation");
+                        System.out.println("2 : Annulation");
+                        System.out.println("");
+                        String optionForm = scan.nextLine();
+                        boolean boucle = true;
+                        while (boucle){
+                            if (optionForm.equals("1")) {
+                                System.out.println("");
+                                System.out.println("Veuillez entrer la formation que vous voulez réserver.");
+                                System.out.println("Pour cela, veuillez indiquer l'année:");
+                                String anneeForm = scan.nextLine();
+                                System.out.println("Veuillez indiquer le rang de la formation:");
+                                String rang = scan.nextLine();
+                                Formation form = new Formation(Integer.valueOf(anneeForm),Integer.valueOf(rang));
+                                new ReservationFormation(query.getidusr(email),form);
+                                boucle = false;
+                            } else if (optionForm.equals("2")) {
+                                System.out.println("");
+                                System.out.println("Veuillez entrer la formation que vous voulez annuler.");
+                                System.out.println("Pour cela, veuillez indiquer l'année:");
+                                String anneeReserv = scan.nextLine();
+                                System.out.println("Veuillez indiquer le rang de la formation:");
+                                String rangReserv = scan.nextLine();
+                                System.out.println("Veuillez indiquer l'ID de la réservation formation:");
+                                String idRes = scan.nextLine();
+                                Formation formAnnul = new Formation(Integer.valueOf(anneeReserv),Integer.valueOf(rangReserv));
+                                ReservationFormationX reserv = new ReservationFormationX(Integer.valueOf(idRes), query.getidusr(email), formAnnul);
+                                reserv.AnnulationResFormation(query.getidusr(email),Integer.valueOf(anneeReserv),Integer.valueOf(rangReserv));
+                                boucle = false;
+                            } else System.out.println("Choisissez 1 ou 2");
+                        }
+                        connecte = autreOptions(scan);
                         break;
-                    case "6":
+
+                    case "6": // Location ou Retour du matériel
+                        System.out.println("");
+                        System.out.println("1 : Location de matériel");
+                        System.out.println("2 : Retour de matériel ");
+                        System.out.println("");
                         boolean end = true;
                         while (end) {
-                            System.out.println("");
-                            System.out.println("1 : Location de matériel");
-                            System.out.println("2 : Retour de matériel ");
                             String option = scan.nextLine();
+                            // L'utilisateur choisit 1 pour louer un matériel
                             if (option.equals("1")) {
                                 System.out.println("");
+                                //initialisation des lot à réserver
                                 HashMap<Lot, Integer> piecesReservees = new HashMap<Lot, Integer>();
                                 System.out.println("Combien de lots vous intéressent ?");
                                 String nbLot = scan.nextLine();
-                                for (int i = 0 ; i < Integer.valueOf(nbLot) ; i++ ){
-                                    System.out.println("Le "+(i+1)+"ème de quel lot?");
-                                    System.out.println("marque :");
-                                    String marque = scan.nextLine();
-                                    System.out.println("modele :");
-                                    String modele = scan.nextLine();
-                                    System.out.println("annee :");
-                                    String annee = scan.nextLine();
-                                    Lot lot = new Lot( marque, modele, Integer.valueOf(annee));
+                                for (int i = 0; i < Integer.valueOf(nbLot); i++) {
+
+                                    if (i == 0) System.out.println("Le premier de quel lot?");
+                                    else System.out.println("Le " + (i + 1) + "ème de quel lot?");
+
+                                    String marque = getMarque(scan);
+                                    String modele = getModele(scan);
+                                    String annee = getAnnee(scan);
+                                    Lot lot = new Lot(modele, marque, Integer.valueOf(annee));
+
                                     System.out.println("Combien de pièces de ce lot ?");
                                     String nbPieces = scan.nextLine();
                                     piecesReservees.put(lot, Integer.valueOf(nbPieces));
@@ -165,348 +274,59 @@ public class Interface {
                                 String dateRecup = scan.nextLine();
                                 System.out.println("Veuillez entrer la date de retour:");
                                 String dateRetour = scan.nextLine();
-                                System.out.println("Combien souhaitez-vous payer comme avance? ");
-                                String sommeRemboursee = scan.nextLine();
-                                new LocationMatInterf(conn, getidusr(email), piecesReservees, dateRecup, dateRetour, Integer.valueOf(sommeRemboursee));
+
+                                //La location:
+                                new LocationMatInterf(inter.getConnection(), query.getidusr(email), piecesReservees, dateRecup, dateRetour);
                                 end = false;
-                            } else if (option.equals("2")) {
+
+                            } 
+                            // L'utilisateur choisit 2 pour retourner un matériel
+                            else if (option.equals("2")) {
                                 System.out.println("Avez-vous abîmé/perdu des pièces? ");
                                 String reponse = scan.nextLine();
-                                boolean cassee = reponse.equals("oui");;
-                                while(cassee){
+                                boolean cassee = reponse.equals("oui");
+                                while (cassee) {
                                     System.out.println("");
                                     System.out.println("Dequel lot?");
-                                    System.out.println("marque: ");
-                                    String marque = scan.nextLine();
-                                    System.out.println("modele: ");
-                                    String modele = scan.nextLine();
-                                    System.out.println("annee: ");
-                                    String annee = scan.nextLine();
+                                    String marque = getMarque(scan);
+                                    String modele = getModele(scan);
+                                    String annee = getAnnee(scan);
+
                                     Lot lot = new Lot(modele, marque, Integer.valueOf(annee));
                                     System.out.println("Combien de pièce de ce lot?");
                                     String nbPieces = scan.nextLine();
-                                    new RetourMatInterf(conn, Integer.valueOf(nbPieces), lot, getidusr(email));
+                                    new RetourMatInterf(inter.getConnection(), Integer.valueOf(nbPieces), lot, query.getidusr(email));
                                     System.out.println("D'autres lots? ");
                                     reponse = scan.nextLine();
                                     cassee = reponse.equals("oui");
-                                }    
+                                }  
                                 end = false;
-                            } else System.out.println("Choisissez 1 ou 2");
-                        }
-                        System.out.println("1 : Choisir une autre option");
-                        System.out.println("2 : Quitter");
-                        boolean end_ = true;
-                        while (end_){
-                            String option2 = scan.nextLine();
-                            if (option2.equals("1")){
-                                choix = scan.nextLine();
-                                break;
-                            } else if (option2.equals("2")){
-                                System.out.println("A la prochaine.");
-                                end_ = false;
-                                fin = false;
+                                System.out.println("");
+                                System.out.println("Merci pour votre réponse!");
+                                System.out.println("");
+                                System.out.println("Choisissez 1 ou 2");
+                            } else {
+                                System.out.println("Choisissez 1 ou 2");
                             }
                         }
-
+                        connecte = autreOptions(scan);
                         break;
-                    case "7":
-                        deleteAll(email);
+
+                    case "7": //Supprimer compte
+                        query.deleteAll(email);
                         System.out.println("Votre compte a été supprimé avec succès.");
                         System.out.println("A la prochaine.");
-                        fin = false;
+                        connecte = false;
                         break;
-                    case "8":
+                    case "8": //
                         System.out.println("A la prochaine.");
-                        fin = false;
+                        connecte = false;
                         break;
                     default:
                         System.out.println("Veuillez choisir l'une des options proposées.");
                 }
-                }
-            }
-
-
-
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    /*
-    * Fonction qui vérifie l'existence de l'email et du mdp
-    *
-    * */
-    boolean verifyPassword(String email, String password) throws SQLException {
-        String pre_stmt = "select pwdusr from utilisateur where emailusr = ?";
-        PreparedStatement stmt = conn.prepareStatement(pre_stmt);
-        stmt.setString(1, email);
-        ResultSet resultSet = stmt.executeQuery();
-        if (resultSet.next()) {
-            String addedPassword = resultSet.getString(1);
-            stmt.close();
-            resultSet.close();
-            if (!addedPassword.equals( password)){
-                System.out.println("Mot de passe incorrect!");
-                return false;
-            }
-            return true;
-
-        }
-        else {
-            System.out.println("Cet e-mail n'existe pas!");
-            stmt.close();
-            resultSet.close();
-            return false;
-        }
-    }
-
-
-    void showRefuge(boolean option) {
-        try {
-            String pre_stmt = "select nomrefuge, SECTEURGEO, NBPLACESREPAS, nbplacesdormir from refuge order by nomrefuge, ?";
-            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
-            stmt.setString(1, option ? "dateouverture, datefermeture" : "nbplacesdormir");
-            ResultSet resultSet = stmt.executeQuery();
-            getTableData(resultSet);
-            stmt.close();
-            resultSet.close();
-        } catch (SQLException e) {
-            System.err.println("An error occurred while executing the SQL query: ");
-        }
-    }
-    void showCourses()  {
-        try {
-            String pre_stmt = "select distinct nomformation, apa.typeactivite, datedemarrage, dureeformation, nbplacesformation " +
-                    "from formation f " +
-                    "join a_pour_activite apa " +
-                    "on f.annee = apa.annee and f.rang = apa.rang " +
-                    "order by datedemarrage, nomformation ";
-            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
-            ResultSet resultSet = stmt.executeQuery();
-            getTableData(resultSet);
-            stmt.close();
-            resultSet.close();
-        } catch (SQLException e) {
-            System.err.println("An error occurred while executing the SQL query: ");
-        }
-
-    }
-
-
-    static void getTableData(ResultSet resultSet) throws SQLException {
-        ResultSetMetaData rsetmd = resultSet.getMetaData();
-        int lenghtColum = rsetmd.getColumnCount();
-        while (resultSet.next()) {
-            for (int j = 1; j <= lenghtColum; j++) {
-                System.out.print(resultSet.getString(j) + "\t");
-            }
-            System.out.println();
-        }
-    }
-
-
-    void showMaterielAct(String activity) {
-        try {
-            String pre_stmt = "SELECT DISTINCT lm.modele, lm.marque, lm.annee " +
-                    "FROM lotmateriel lm  " +
-                    "JOIN utilise u ON lm.modele = u.modele AND lm.marque = u.marque AND lm.annee = u.annee " +
-                    "WHERE u.typeactivite = ? AND lm.nbpieces > 0 " +
-                    "MINUS " +
-                    "SELECT DISTINCT lm.modele, lm.marque, lm.annee " +
-                    "FROM lotmateriel lm " +
-                    "JOIN a_pour_dateperemption apd ON lm.modele = apd.modele AND lm.marque = apd.marque AND lm.annee = apd.annee " +
-                    "where apd.dateperemption < SYSDATE ";
-            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
-            stmt.setString(1, activity);
-            ResultSet resultSet = stmt.executeQuery();
-            getTableData(resultSet);
-            stmt.close();
-            resultSet.close();
-        } catch (SQLException e) {
-            System.err.println("An error occurred while executing the SQL query: ");
-        }
-    }
-
-    void showMaterielCat(String categorie)  {
-        try {
-            String pre_stmt = "SELECT DISTINCT lm.modele, lm.marque, lm.annee, lm.categorie, lm.NBPIECES, coalesce(lm.NBPIECES -NBPIECESalouee, lm.NBPIECES ) as NBPIECESDISPO " +
-                    "from lotmateriel lm " +
-                    "left join (SELECT coalesce(SUM(NBPIECESRESERVEES),0) as NBPIECESalouee, modele as md ,marque mq ,annee an from reservationpieces group by marque,modele,annee) " +
-                    "on md = lm.modele and an = lm.annee and mq = lm.marque " +
-                    "where categorie = ? and coalesce(lm.NBPIECES -NBPIECESalouee, lm.NBPIECES ) > 0 " +
-                    "MINUS " +
-                    "(SELECT DISTINCT lm.modele, lm.marque, lm.annee, lm.categorie, lm.NBPIECES, NBPIECESDISPO " +
-                    "FROM lotmateriel lm " +
-                    "join (SELECT coalesce(SUM(NBPIECESRESERVEES),0) as NBPIECESDISPO, modele as md ,marque mq ,annee an from reservationpieces rp group by marque,modele,annee) " +
-                    "on md = lm.modele and an = lm.annee and mq = lm.marque " +
-                    "JOIN a_pour_dateperemption apd ON lm.modele = apd.modele AND lm.marque = apd.marque AND lm.annee = apd.annee " +
-                    "where apd.dateperemption < SYSDATE)";
-
-            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
-            stmt.setString(1, categorie);
-            ResultSet resultSet = stmt.executeQuery();
-            getTableData(resultSet);
-            stmt.close();
-            resultSet.close();
-            pre_stmt = "select souscategorie from a_comme_sous_categorie where categorie = ?";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setString(1, categorie);
-            resultSet = stmt.executeQuery();
-            while (resultSet.next()) {
-                showMaterielCat(resultSet.getString(1));
-            }
-            stmt.close();
-            resultSet.close();
-        } catch (SQLException e) {
-            System.err.println("An error occurred while executing the SQL query: ");
-        }
-    }
-
-    void deleteAll(String EmailUsrString) throws SQLException {
-        try {
-            // select the idusr
-            String pre_stmt = "select idusr from utilisateur where emailusr = ? ";
-            conn.setAutoCommit(false);
-            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
-            stmt.setString(1, EmailUsrString);
-            ResultSet resultSet = stmt.executeQuery();
-            int idusr;
-            if (resultSet.next()) idusr = resultSet.getInt(1);
-            else {
-                System.out.println("there is no such email in our database");
-                stmt.close();
-                resultSet.close();
-                return;
-            }
-            stmt.close();
-            resultSet.close();
-
-            // select the new idusr
-            pre_stmt = "select max(idusr) from compteutilisateur ";
-            conn.setAutoCommit(false);
-            stmt = conn.prepareStatement(pre_stmt);
-            resultSet = stmt.executeQuery();
-            int newIdUsr;
-            resultSet.next();
-            newIdUsr = resultSet.getInt(1) + 1;
-            stmt.close();
-            resultSet.close();
-
-            //delete all the information of the user from utilisateur
-            pre_stmt = "delete from utilisateur where emailusr = ? ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setString(1, EmailUsrString);
-            stmt.executeUpdate();
-            stmt.close();
-
-            // change the idusr in reservationrefuge
-            pre_stmt = "update reservationrefuge set idusr = ? where idusr = ? ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setInt(1, newIdUsr);
-            stmt.setInt(2, idusr);
-            stmt.executeUpdate();
-            stmt.close();
-
-            // change the idusr in locationmateriel
-            pre_stmt = "update locationmateriel set idusr = ? where idusr = ? ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setInt(1, newIdUsr);
-            stmt.setInt(2, idusr);
-            stmt.executeUpdate();
-            stmt.close();
-
-            // change the idusr in reservationformation
-            pre_stmt = "update reservationformation set idusr = ? where idusr = ? ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setInt(1, newIdUsr);
-            stmt.setInt(2, idusr);
-            stmt.executeUpdate();
-            stmt.close();
-
-            //add newIdUsr to compteutilisateur
-            pre_stmt = "insert into compteutilisateur values(?) ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setInt(1, newIdUsr);
-            stmt.executeUpdate();
-            stmt.close();
-
-            //add newIdUsr to adherent
-            pre_stmt = "insert into adherent values(?) ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setInt(1, newIdUsr);
-            stmt.executeUpdate();
-            stmt.close();
-
-            //delete idusr from compteutilisateur
-            pre_stmt = "delete adherent where idusr = ? ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setInt(1, idusr);
-            stmt.executeUpdate();
-            stmt.close();
-
-            //delete idusr from compteutilisateur
-            pre_stmt = "delete compteutilisateur where idusr = ? ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setInt(1, idusr);
-            stmt.executeUpdate();
-            stmt.close();
-        } catch (SQLException e) {
-            try {
-                conn.rollback();
-                System.err.println("An error occurred while executing the SQL query, please try again later");
-            } catch (SQLException ex) {
-                System.err.println("An error occurred while executing the SQL query");
-            }
-        } finally {
-            try {
-                conn.setAutoCommit(true);
-            } catch (SQLException e) {
-                System.err.println("An error occurred while executing the SQL query");
             }
         }
-    }
 
-
-
-    public static void main(String[] args){
-        Interface inter = new Interface();
-    }
-
-    private int getidusr(String EmailUsrString) {
-        try {
-            // select the idusr
-            conn.setAutoCommit(false);
-            String pre_stmt = "select idusr from utilisateur where emailusr = ? ";
-            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
-            stmt.setString(1, EmailUsrString);
-            ResultSet resultSet = stmt.executeQuery();
-            if (resultSet.next()) {
-                int idusr = resultSet.getInt(1);
-                stmt.close();
-                resultSet.close();
-                return idusr;
-            }
-            else {
-                System.out.println("there is no such email in our database");
-                stmt.close();
-                resultSet.close();
-            }
-        } catch (SQLException e) {
-            try {
-                conn.rollback();
-                System.err.println("An error occurred while executing the SQL query, please try again later");
-            } catch (SQLException ex) {
-                System.err.println("An error occurred while executing the SQL query");
-            }
-        } finally {
-            try {
-                conn.setAutoCommit(true);
-            } catch (SQLException e) {
-                System.err.println("An error occurred while executing the SQL query");
-            }
-        }
-        return -1;
     }
 }

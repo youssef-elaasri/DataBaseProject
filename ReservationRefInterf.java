@@ -62,7 +62,7 @@ public class ReservationRefInterf {
         stmnt.setInt(7, idUsr);
 
         stmnt.execute();
-
+        System.out.println("Votre réservation a bien été prise en compte. :)");
 
 
 
