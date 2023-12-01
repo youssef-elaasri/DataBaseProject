@@ -10,20 +10,12 @@ public class ReservationFormationX {
     private int idRes;
     private HashMap<Integer,Integer> reservFormationAttente;
 
-    public ReservationFormationX(int idRes, int idUsr, Formation formation){
+    public ReservationFormationX(Connection conn, int idRes, int idUsr, Formation formation){
+        this.conn = conn;
         this.idRes = idRes;
         int annee = formation.getAnnee();
         int rang = formation.getRang();
         try {
-            // Enregistrement du driver Oracle
-            System.out.print("Loading Oracle driver... ");
-            DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
-            System.out.println("loaded");
-
-            // Etablissement de la connection
-            System.out.print("Connecting to the database... ");
-            conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
-            System.out.println("connected");
             if (verifyAdherent(idUsr)) {
                 this.InitResAttente(annee, rang);
             }
@@ -46,12 +38,10 @@ public class ReservationFormationX {
         while (result.next()) {
             int retrievedIdRes = result.getInt("idReservationFormation");
             int retrievedRangAttente = result.getInt("rangAttente");
-
             this.reservFormationAttente.put(retrievedIdRes, retrievedRangAttente);
         }
         stmnt.close();
         result.close();
-        System.out.println("En Attente = " + this.reservFormationAttente.size());
     }
     private int CalculNbRes() throws SQLException {
         String nbResStatement = "SELECT COUNT(*) FROM ReservationFormation WHERE idReservationFormation = ?";
@@ -64,19 +54,9 @@ public class ReservationFormationX {
         }
         stmnt.close();
         result.close();
-        System.out.println(res);
         return res;
     }
     public void AnnulationResFormation(int idUsr, int annee, int rang) throws SQLException {
-        // Enregistrement du driver Oracle
-        System.out.print("Loading Oracle driver... ");
-        DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
-        System.out.println("loaded");
-
-        // Etablissement de la connection
-        System.out.print("Connecting to the database... ");
-        conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
-        System.out.println("connected");
         InitResAttente(annee, rang);
         int nbRes = this.CalculNbRes();
         if (nbRes > 0) {
@@ -103,7 +83,6 @@ public class ReservationFormationX {
 
     private int calculPrix(int anneeFormation, int rangFormation) throws SQLException {
         int prixReservation = 0;
-
         String prestmnt = "SELECT prixFormation FROM Formation WHERE annee = ? AND rang = ?";
         PreparedStatement stmnt = conn.prepareStatement(prestmnt);
         stmnt.setInt(1, anneeFormation);
@@ -134,11 +113,9 @@ public class ReservationFormationX {
     }
 
     private void updateReservations(int idUsr, int annee, int rang) throws SQLException {
-        System.out.println("Updating " + this.reservFormationAttente.size());
         for (HashMap.Entry<Integer, Integer> entry : this.reservFormationAttente.entrySet()) {
             int idRes = entry.getKey();
             int valeurRangAttente = entry.getValue();
-            System.out.println("RangAttente = " + valeurRangAttente);
             valeurRangAttente--;
             this.reservFormationAttente.put(idRes, valeurRangAttente);
             String updtStatement = "UPDATE ReservationFormation SET rangAttente = ? WHERE idReservationFormation = ?";
