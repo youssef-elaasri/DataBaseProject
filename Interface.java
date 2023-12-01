@@ -321,34 +321,18 @@ public class Interface {
                             } else {
                                 System.out.println("Choisissez 1 ou 2");
                             }
-                            System.out.println("");
-                            System.out.println("1 : Choisir une autre option");
-                            System.out.println("2 : Se déconnecter");
-                            String option2 = scan.nextLine();
-                            if (option2.equals("1")) { //Choisir une autre option
-                                printOptions();
-                                break;
-                            } else if (option2.equals("2")) { //Quitter
-                                System.out.println("A la prochaine.");
-                                connecte= false;
-                            }
                         }
-                        
-                        boolean choix8 = true;
-                        while (choix8) {
-                            String option2 = scan.nextLine();
-                            if (option2.equals("1")) { //Choisir une autre option
-                                //choix = scan.nextLine();
-                                System.out.println("dkhlt ofc");
-                                printOptions();
-                                break;
-                            } else if (option2.equals("2")) { //Quitter
-                                System.out.println("A la prochaine.");
-                                choix8 = false;
-                                connecte= false;
-                            }
+                        System.out.println("");
+                        System.out.println("1 : Choisir une autre option");
+                        System.out.println("2 : Se déconnecter");
+                        String option2 = scan.nextLine();
+                        if (option2.equals("1")) { //Choisir une autre option
+                            printOptions();
+                            break;
+                        } else if (option2.equals("2")) { //Quitter
+                            System.out.println("A la prochaine.");
+                            connecte= false;
                         }
-                        System.out.println("khrjt mn l while choix8");
                         System.out.println(connecte);
                         break;
                     case "7": //Supprimer compte
