@@ -38,7 +38,7 @@ public class ReservationRefuge {
                 return;
             }
             System.out.println("3");
-            if(!verifyDate(emailRefuge, date)){
+            if(!verifyDate(emailRefuge, date, nuitsReserves)){
                 System.err.println("Le refuge sera fermé à cette date :(");
                 return;
             }
@@ -64,6 +64,87 @@ public class ReservationRefuge {
             e.printStackTrace(System.err);
         }
     }
+
+    public ReservationRefuge(int iDRefuge){
+        try {
+            // Registering the Oracle driver
+            DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+
+            // Establishing the connection
+            conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
+
+            if(verifyIdRefuge(iDRefuge)){
+                String sectionGeo = deleteQuery(iDRefuge);
+                suggestRefuge(sectionGeo);
+            }
+        } catch (SQLException e) {
+            System.err.println("failed");
+            e.printStackTrace(System.err);
+        }
+
+    }
+
+
+    private Boolean verifyIdRefuge(int iDRefuge) throws SQLException {
+
+        String refugeExistenceStatement = "SELECT COUNT(*) FROM RESERVATIONREFUGE WHERE IDRESREFUGE = ?";
+        PreparedStatement stmt = conn.prepareStatement((refugeExistenceStatement));
+        stmt.setInt(1, iDRefuge);
+        ResultSet result = stmt.executeQuery();
+        if (result.next()) {
+            if (result.getInt(1) > 0) {
+                stmt.close();
+                result.close();
+                return true;
+            }
+            System.out.println("cet ID " + iDRefuge + " N'existe pas");
+        }
+
+        stmt.close();
+        result.close();
+
+        return false;
+    }
+
+
+    private String deleteQuery(int iDRefuge) throws SQLException {
+        try {
+            String sectionGeoExistenceStatement = "SELECT secteurGeo from (RESERVATIONREFUGE join Refuge R on R.email = RESERVATIONREFUGE.email) where ReservationRefuge.idResRefuge = ?";
+            PreparedStatement stmt = conn.prepareStatement((sectionGeoExistenceStatement));
+            stmt.setInt(1, iDRefuge);
+            ResultSet result = stmt.executeQuery();
+            stmt.close();
+            if (result.next()) {
+                String sectionGeo = result.getString(1);
+                String prestmnt = "DELETE FROM RESERVATIONREFUGE where ReservationRefuge = ?";
+                stmt = conn.prepareStatement(prestmnt);
+                stmt.execute();
+                stmt.close();
+                return sectionGeo;
+            }
+            System.err.println("failed");
+            return "ERROR";
+        }catch(SQLException e){
+            System.err.println("failed");
+            return "ERROR";
+        }
+    }
+
+    private void suggestRefuge(String sectionGeo) throws SQLException {
+        if(sectionGeo.equals("ERROR")){
+            System.out.println("there is an error somewhere");
+        }
+
+        String prestmt = "SELECT nomRefuge FROM Refuge where secteurGeo = ?";
+        PreparedStatement stmt = conn.prepareStatement(prestmt);
+        ResultSet result = stmt.executeQuery();
+        System.out.print("Tu peut aussi aller aux refuges suivants: ");
+        while(result.next()){
+            System.out.print(result.getString(1) + " ");
+        }
+        System.out.print("\n");
+    }
+
 
     private void insertQuery(int nuitsReserves, int nbrRepas, int prix, String email, int idUsr, String date) throws SQLException {
         try {
@@ -228,7 +309,7 @@ public class ReservationRefuge {
         return false;
     }
 
-    private Boolean verifyDate(String  emailRefuge, String date) throws SQLException {
+    private Boolean verifyDate(String  emailRefuge, String date, int nuits) throws SQLException {
         //LocalDate datee = date.toLocalDate();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -247,7 +328,7 @@ public class ReservationRefuge {
             if(fermeture.isBefore(ouverture)) fermeture = fermeture.plusYears(1);
             stmntDate.close();
             result.close();
-            return localDate.isAfter(ouverture) && localDate.isBefore(fermeture); //TODO no such example
+            return localDate.isAfter(ouverture) && localDate.plusDays(nuits).isBefore(fermeture); //TODO no such example
         }
 
         return false;
