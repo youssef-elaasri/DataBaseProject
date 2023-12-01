@@ -95,6 +95,24 @@ public class Interface {
         return scan.nextLine();
     }
 
+    private static boolean autreOptions(Scanner scan) {
+        System.out.println("");
+        System.out.println("1 : Choisir une autre option");
+        System.out.println("2 : Se déconnecter");
+        boolean choix4 = true;
+        while (choix4) {
+            String option2 = scan.nextLine();
+            if (option2.equals("1")) { //Choisir une autre option
+                printOptions();
+                break;
+            } else if (option2.equals("2")) { //Quitter
+                System.out.println("A la prochaine.");
+                choix4 = false;
+                return false;
+            }
+        }
+        return true;
+    }
     public static void main(String[] args) throws SQLException {
         // Se connecter à oracle
         Interface inter = new Interface();
@@ -133,7 +151,7 @@ public class Interface {
                                 c = false;
                             } else System.out.println("Choisissez 1 ou 2");
                         }
-                        System.out.println("");
+                        /*System.out.println("");
                         System.out.println("1 : Choisir une autre option");
                         System.out.println("2 : Se déconnecter");
                         boolean choix4 = true;
@@ -147,28 +165,13 @@ public class Interface {
                                 choix4 = false;
                                 connecte= false;
                             }
-                        }
+                        }*/
+                        connecte = autreOptions(scan);
                         break;
 
                     case "2": //Afficher les formations
                         query.showCourses();
-
-                        System.out.println("");
-                        System.out.println("1 : Choisir une autre option");
-                        System.out.println("2 : Se déconnecter");
-                        boolean choix5 = true;
-                        while (choix5) {
-                            String option2 = scan.nextLine();
-                            if (option2.equals("1")) { //Choisir une autre option
-                                choix = scan.nextLine();
-                                printOptions();
-                                break;
-                            } else if (option2.equals("2")) { //Quitter
-                                System.out.println("A la prochaine.");
-                                choix5 = false;
-                                connecte= false;
-                            }
-                        }
+                        connecte = autreOptions(scan);
                         break;
 
                     case "3":
@@ -192,21 +195,7 @@ public class Interface {
                                 s = false;
                             } else System.out.println("Choisissez 1 ou 2");
                         }
-                        boolean choix6 = true;
-                        while (choix6) {
-                            String option2 = scan.nextLine();
-                            System.out.println("hola");
-                            if (option2.equals("1")) { //Choisir une autre option
-                                System.out.println("hola");
-                                choix = scan.nextLine();
-                                printOptions();
-                                break;
-                            } else if (option2.equals("2")) { //Quitter
-                                System.out.println("A la prochaine.");
-                                choix6 = false;
-                                connecte= false;
-                            }
-                        }
+                        connecte = autreOptions(scan);
                         break;
 
                     case "4":
@@ -233,19 +222,7 @@ public class Interface {
                         String date = scan.nextLine();
                         new ReservationRefuge(query.getidusr(email), emailRef, Integer.valueOf(nuits), date, listeDeRepas.toArray(new String[0]));
 
-                        boolean choix7 = true;
-                        while (choix7) {
-                            String option2 = scan.nextLine();
-                            if (option2.equals("1")) { //Choisir une autre option
-                                choix = scan.nextLine();
-                                printOptions();
-                                break;
-                            } else if (option2.equals("2")) { //Quitter
-                                System.out.println("A la prochaine.");
-                                choix7 = false;
-                                connecte= false;
-                            }
-                        }
+                        connecte = autreOptions(scan);
                         break;
 
 
@@ -322,18 +299,7 @@ public class Interface {
                                 System.out.println("Choisissez 1 ou 2");
                             }
                         }
-                        System.out.println("");
-                        System.out.println("1 : Choisir une autre option");
-                        System.out.println("2 : Se déconnecter");
-                        String option2 = scan.nextLine();
-                        if (option2.equals("1")) { //Choisir une autre option
-                            printOptions();
-                            break;
-                        } else if (option2.equals("2")) { //Quitter
-                            System.out.println("A la prochaine.");
-                            connecte= false;
-                        }
-                        System.out.println(connecte);
+                        connecte = autreOptions(scan);
                         break;
                     case "7": //Supprimer compte
                         query.deleteAll(email);
