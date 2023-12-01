@@ -243,15 +243,10 @@ public class Interface {
                             } else if (optionForm.equals("2")) {
                                 System.out.println("");
                                 System.out.println("Veuillez entrer la formation que vous voulez annuler.");
-                                System.out.println("Pour cela, veuillez indiquer l'année:");
-                                String anneeReserv = scan.nextLine();
-                                System.out.println("Veuillez indiquer le rang de la formation:");
-                                String rangReserv = scan.nextLine();
                                 System.out.println("Veuillez indiquer l'ID de la réservation formation:");
                                 String idRes = scan.nextLine();
-                                Formation formAnnul = new Formation(Integer.valueOf(anneeReserv),Integer.valueOf(rangReserv));
-                                ReservationFormationX reserv = new ReservationFormationX(inter.getConnection(),Integer.valueOf(idRes), query.getidusr(email), formAnnul);
-                                reserv.AnnulationResFormation(query.getidusr(email),Integer.valueOf(anneeReserv),Integer.valueOf(rangReserv));
+                                ReservationFormationX reserv = new ReservationFormationX(inter.getConnection(),Integer.valueOf(idRes), query.getidusr(email));
+                                reserv.AnnulationResFormation(query.getidusr(email));
                                 boucle = false;
                             } else System.out.println("Choisissez 1 ou 2");
                         }
