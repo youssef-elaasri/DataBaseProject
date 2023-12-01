@@ -15,38 +15,21 @@ public class ReservationFormation {
     private int idRes;
     private HashMap<Integer,Integer> reservFormationAttente;
 
-    public ReservationFormation(int idUsr, Formation formation){
+    public ReservationFormation(Connection conn, int idUsr, Formation formation){
+        this.conn = conn;
         this.idUsr = idUsr;
         this.annee = formation.getAnnee();
         this.rang = formation.getRang();
         try {
-            // Enregistrement du driver Oracle
-            System.out.print("Loading Oracle driver... ");
-            DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
-            System.out.println("loaded");
-
-            // Etablissement de la connection
-            System.out.print("Connecting to the database... ");
-            conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
-            System.out.println("connected");
             this.InitResAttente();
             this.InitIdRes();
             if( verifyAdherent(idUsr) && verifyFormation(this.annee, this.rang) ) {
                 if (verifyDisponibilite(this.annee, this.rang)) {
                     insertQuery(0, this.annee, this.rang, idUsr);
                 } else {
-                    for (HashMap.Entry<Integer, Integer> entry : this.reservFormationAttente.entrySet()) {
-                        int valeurRangAttente = entry.getValue();
-                        System.out.println("valeurRangAttente :" + valeurRangAttente);
-                    }
-                    System.out.println("we insert " + this.annee + "--" + this.rang);
                     this.reservFormationAttente.put(this.idRes,this.reservFormationAttente.size() + 1);
-                    for (HashMap.Entry<Integer, Integer> entry : this.reservFormationAttente.entrySet()) {
-                        int valeurRangAttente = entry.getValue();
-                        System.out.println("valeurRangAttente :" + valeurRangAttente);
-                    }
                     insertQuery(reservFormationAttente.size() , this.annee, this.rang, idUsr);
-                    System.out.println("Pas assez de place désolé. Rang en liste d'attente: " + reservFormationAttente.size());
+                    System.out.println("Oups, pas assez de place désolé. Rang en liste d'attente: " + reservFormationAttente.size());
                 }
             }
             conn.close();
@@ -68,7 +51,6 @@ public class ReservationFormation {
         }
         stmnt.close();
         result.close();
-        System.out.println("NbRes : " + res);
         return res;
     }
 
@@ -82,9 +64,6 @@ public class ReservationFormation {
         if (result.next()) {
             maxId = result.getInt(1);
         }
-
-        System.out.println("Max idReservationFormation: " + maxId);
-
         stmnt.close();
         result.close();
         this.idRes = maxId + 1;
@@ -101,12 +80,10 @@ public class ReservationFormation {
         while (result.next()) {
             int retrievedIdRes = result.getInt("idReservationFormation");
             int retrievedRangAttente = result.getInt("rangAttente");
-
             this.reservFormationAttente.put(retrievedIdRes, retrievedRangAttente);
         }
         stmnt.close();
         result.close();
-        System.out.println("En Attente = " + this.reservFormationAttente.size());
     }
 
     private void insertQuery(int rangAttente, int anneeFormation, int rangFormation, int idUsr) throws SQLException {
@@ -191,8 +168,6 @@ public class ReservationFormation {
             stmt.close();
             result.close();
             boolean ret = nbRes < nbPlacesFormation;
-            System.out.println(nbRes + " // " + nbPlacesFormation);
-            System.out.println(ret);
             return ret;
         }
         stmt.close();
