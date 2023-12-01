@@ -138,32 +138,29 @@ public class ReservationFormationX {
     private void updateReservations(int idUsr, int annee, int rang) throws SQLException {
         System.out.println("Updating " + this.reservFormationAttente.size());
         for (HashMap.Entry<Integer, Integer> entry : this.reservFormationAttente.entrySet()) {
-            String deleteStatement = "SELECT * FROM ReservationFormation WHERE idReservationFormation = ?";
-            PreparedStatement stmtAttente = conn.prepareStatement(deleteStatement);
-            stmtAttente.setInt(1, this.idRes);
-            ResultSet resultSetAttente = stmtAttente.executeQuery();
-            int anneeAttente = resultSetAttente.getInt("aneee");
-            int rangAttente = resultSetAttente.getInt("rang");
-            stmtAttente.close();
-            resultSetAttente.close();
-            if( anneeAttente == annee && rangAttente == rang) {
-                int idRes = entry.getKey();
-                int valeurRangAttente = entry.getValue();
-                System.out.println("RangAttente = " + valeurRangAttente);
-                valeurRangAttente--;
-                this.reservFormationAttente.put(idRes, valeurRangAttente);
-                String updtStatement = "UPDATE ReservationFormation SET rangAttente = rangAttente - 1 WHERE annee = ? AND rang = ?";
-                PreparedStatement stmt = conn.prepareStatement((updtStatement));
-                stmt.setInt(1, annee);
-                stmt.setInt(2, rang);
-                ResultSet resultSet = stmt.executeQuery();
-                if (valeurRangAttente == 0) {
-                    System.out.println("idUsr = " + idUsr + " vous êtes passez en liste principale, merci pour votre patience.");
-                    this.reservFormationAttente.remove(idRes);
-                }
-                stmt.close();
-                resultSet.close();
+            int idRes = entry.getKey();
+            int valeurRangAttente = entry.getValue();
+            System.out.println("RangAttente = " + valeurRangAttente);
+            valeurRangAttente--;
+            this.reservFormationAttente.put(idRes, valeurRangAttente);
+            String updtStatement = "UPDATE ReservationFormation SET rangAttente = rangAttente - 1 WHERE annee = ? AND rang = ?";
+            PreparedStatement stmt = conn.prepareStatement((updtStatement));
+            stmt.setInt(1, annee);
+            stmt.setInt(2, rang);
+            ResultSet resultSet = stmt.executeQuery();
+            String message = "idUsr = " + idUsr + " vous êtes passez en position : " + valeurRangAttente + " dans la liste d'attente, merci pour votre patience.";
+            if (valeurRangAttente == 0) {
+                message = "idUsr = " + idUsr + " vous êtes passez en liste principale, merci pour votre patience.";
+                this.reservFormationAttente.remove(idRes);
             }
+            stmt.close();
+            resultSet.close();
+            String preInsertstmnt = "INSERT INTO Message(message, idUsr) VALUES (?, ?)";
+            PreparedStatement stmntInsert = conn.prepareStatement(preInsertstmnt);
+            stmntInsert.setString(1, message);
+            stmntInsert.setInt(2, idUsr);
+            stmntInsert.execute();
+            stmntInsert.close();
         }
     }
 }
