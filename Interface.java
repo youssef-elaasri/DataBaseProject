@@ -26,6 +26,7 @@ public class Interface {
 
             System.out.print("Connecting to the database... ");
             conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
+            conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
             System.out.println("connected");
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -47,11 +48,12 @@ public class Interface {
         System.out.println("1 : Afficher nos magnifiques refuges");
         System.out.println("2 : Afficher nos formations polyvalentes");
         System.out.println("3 : Afficher nos matériels de qualité");
-        System.out.println("4 : Faire une réservation de refuge");
+        System.out.println("4 : Faire une réservation de refuge ou annulation");
         System.out.println("5 : Faire une réservation de formation ou annulation");
         System.out.println("6 : Faire une location de matériel ou retourner un matériel");
-        System.out.println("7 : Supprimer votre compte");
-        System.out.println("8 : Se déconnecter");
+        System.out.println("7 : Afficher vos messages");
+        System.out.println("8 : Supprimer votre compte");
+        System.out.println("9 : Se déconnecter");
         System.out.println("");
     }
 
@@ -183,25 +185,40 @@ public class Interface {
                         connecte = autreOptions(scan);
                         break;
 
-                    case "4":
-                        System.out.println("Veuillez entrez l'email du refuge que vous voulez:");
-                        String emailRef = scan.nextLine();
-                        System.out.println("Veuillez entrez le nombre de nuitées:");
-                        String nuits = scan.nextLine();
-                        ArrayList<String> listeDeRepas = new ArrayList<>();
-                        System.out.println("Veuillez ajoutez le ou les repas que vous voulez.");
-                        System.out.println("Si vouz voulez plus d'un repas, tapez Entrer après chaque repas.");
-                        System.out.println("si vous ne voulez pas de repas appuyez sur Entrer.");
-                        while (true) {
-                            String repas = scan.nextLine();
-                            if (repas.equals("")) {
-                                break;
-                            }
-                            listeDeRepas.add(repas);
+                    case "4": //Réservation/Annulation Refuge
+                        System.out.println("");
+                        System.out.println("1 : Réservation");
+                        System.out.println("2 : Annulation");
+                        System.out.println("");
+                        String optionRef = scan.nextLine();
+                        boolean boucleRef = true;
+                        while (boucleRef){
+                            if (optionRef.equals("1")) { //Réservation
+                                System.out.println("Veuillez entrez l'email du refuge que vous voulez:");
+                                String emailRef = scan.nextLine();
+                                System.out.println("Veuillez entrez le nombre de nuitées:");
+                                String nuits = scan.nextLine();
+                                ArrayList<String> listeDeRepas = new ArrayList<>();
+                                System.out.println("Veuillez ajoutez le ou les repas que vous voulez.");
+                                System.out.println("Si vouz voulez plus d'un repas, tapez Entrer après chaque repas.");
+                                System.out.println("si vous ne voulez pas de repas appuyez sur Entrer.");
+                                while (true) {
+                                    String repas = scan.nextLine();
+                                    if (repas.equals("")) {
+                                        break;
+                                    }
+                                    listeDeRepas.add(repas);
+                                }
+                                System.out.println("Veuillez entrez la date de réservation sous la forme YYYY-MM-DD:");
+                                String date = scan.nextLine();
+                                new ReservationRefuge(query.getidusr(email), emailRef, Integer.valueOf(nuits), date, listeDeRepas.toArray(new String[0]));
+                                boucleRef = false;
+                            } else if (optionRef.equals("2")) {//Annulation
+                                System.out.println("Veuillez indiquer l'id de la réservation");
+                                String idResREF = scan.nextLine();
+                                new ReservationRefuge(Integer.valueOf(idResREF));
+                            } else System.out.println("Choisissez 1 ou 2");
                         }
-                        System.out.println("Veuillez entrez la date de réservation sous la forme YYYY-MM-DD:");
-                        String date = scan.nextLine();
-                        new ReservationRefuge(query.getidusr(email), emailRef, Integer.valueOf(nuits), date, listeDeRepas.toArray(new String[0]));
                         connecte = autreOptions(scan);
                         break;
 
@@ -282,7 +299,7 @@ public class Interface {
                             } 
                             // L'utilisateur choisit 2 pour retourner un matériel
                             else if (option.equals("2")) {
-                                System.out.println("Avez-vous abîmé/perdu des pièces? ");
+                                System.out.println("Avez-vous abîmé/perdu des pièces? Répondre par oui ou non");
                                 String reponse = scan.nextLine();
                                 boolean cassee = reponse.equals("oui");
                                 while (cassee) {
@@ -301,8 +318,10 @@ public class Interface {
                                     cassee = reponse.equals("oui");
                                 }  
                                 end = false;
-                                System.out.println("");
-                                System.out.println("Merci pour votre réponse!");
+                                if (reponse.equals("non")){
+                                    System.out.println("");
+                                    System.out.println("Merci pour votre réponse!");
+                                }
                                 System.out.println("");
                                 System.out.println("Choisissez 1 ou 2");
                             } else {
@@ -312,13 +331,22 @@ public class Interface {
                         connecte = autreOptions(scan);
                         break;
 
-                    case "7": //Supprimer compte
+                    case "7": //Afficher les messages
+                        String checkStatement = "Select message FROM Message WHERE idUsr = ?";
+                        PreparedStatement checkPrep = inter.getConnection().prepareStatement(checkStatement);
+                        checkPrep.setInt(1,query.getidusr(email));
+                        ResultSet checkRes = checkPrep.executeQuery();
+                        TablesQueryIntef.getTableData(checkRes);
+                        connecte = autreOptions(scan);
+                        break;
+
+                    case "8": //Supprimer compte
                         query.deleteAll(email);
                         System.out.println("Votre compte a été supprimé avec succès.");
                         System.out.println("A la prochaine.");
                         connecte = false;
                         break;
-                    case "8": //
+                    case "9": //
                         System.out.println("A la prochaine.");
                         connecte = false;
                         break;

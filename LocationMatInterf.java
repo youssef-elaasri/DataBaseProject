@@ -102,9 +102,6 @@ public class LocationMatInterf {
         }
     }
 
-    private int calculPrix(){
-
-    }
 
 
     private boolean verifIdAdherent ( int idAdherent) throws SQLException {

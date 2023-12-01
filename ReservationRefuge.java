@@ -116,7 +116,7 @@ public class ReservationRefuge {
             stmt.close();
             if (result.next()) {
                 String sectionGeo = result.getString(1);
-                String prestmnt = "DELETE FROM RESERVATIONREFUGE where ReservationRefuge = ?";
+                String prestmnt = "DELETE FROM RESERVATIONREFUGE where idResRefuge = ?";
                 stmt = conn.prepareStatement(prestmnt);
                 stmt.execute();
                 stmt.close();
@@ -134,12 +134,15 @@ public class ReservationRefuge {
         if(sectionGeo.equals("ERROR")){
             System.out.println("there is an error somewhere");
         }
-
+        System.out.println(sectionGeo);
         String prestmt = "SELECT nomRefuge FROM Refuge where secteurGeo = ?";
         PreparedStatement stmt = conn.prepareStatement(prestmt);
+        stmt.setString(1,sectionGeo);
         ResultSet result = stmt.executeQuery();
-        System.out.print("Tu peut aussi aller aux refuges suivants: ");
+        System.out.print("Tu peux aussi aller aux refuges suivants: ");
         while(result.next()){
+            System.out.println("hej");
+
             System.out.print(result.getString(1) + " ");
         }
         System.out.print("\n");

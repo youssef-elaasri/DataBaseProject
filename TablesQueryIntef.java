@@ -229,14 +229,14 @@ public class TablesQueryIntef {
     
         // Affichage des noms de colonnes avec une largeur fixe
         for (int i = 1; i <= columnCount; i++) {
-            System.out.printf("%-20s", rsetmd.getColumnName(i));
+            System.out.printf("%-30s", rsetmd.getColumnName(i));
         }
         System.out.println();
     
         // Affichage des lignes de données avec une largeur fixe
         while (resultSet.next()) {
             for (int j = 1; j <= columnCount; j++) {
-                System.out.printf("%-20s", resultSet.getString(j));
+                System.out.printf("%-30s", resultSet.getString(j));
             }
             System.out.println();
         }
