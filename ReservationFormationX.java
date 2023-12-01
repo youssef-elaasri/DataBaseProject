@@ -1,5 +1,7 @@
 import java.sql.*;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Iterator;
 
 public class ReservationFormationX {
     static final String CONN_URL = "jdbc:oracle:thin:@oracle1.ensimag.fr:1521:oracle1";
@@ -25,10 +27,11 @@ public class ReservationFormationX {
             if (resultRes.next()) {
                 int annee = resultRes.getInt("annee");
                 int rang = resultRes.getInt("rang");
+                int rangAttente = resultRes.getInt("rangAttente");
                 this.annee = annee;
                 this.rang = rang;
                 if (verifyAdherent(idUsr)) {
-                    this.InitResAttente(annee, rang);
+                    this.InitResAttente(annee, rang, rangAttente);
                 }
             }
             resstmnt.close();
@@ -40,12 +43,13 @@ public class ReservationFormationX {
         }
     }
 
-    private void InitResAttente(int annee, int rang) throws SQLException {
+    private void InitResAttente(int annee, int rang, int rangAttente) throws SQLException {
         this.reservFormationAttente = new HashMap<Integer, Integer>();
-        String initResStatement = "SELECT * FROM ReservationFormation WHERE annee = ? AND rang = ? AND rangAttente >= 1";
+        String initResStatement = "SELECT * FROM ReservationFormation WHERE annee = ? AND rang = ? AND rangAttente >= ?";
         PreparedStatement initResstmnt = conn.prepareStatement(initResStatement);
         initResstmnt.setInt(1, annee);
         initResstmnt.setInt(2, rang);
+        initResstmnt.setInt(3, rangAttente);
         ResultSet result = initResstmnt.executeQuery();
 
         while (result.next()) {
@@ -72,6 +76,10 @@ public class ReservationFormationX {
     public void AnnulationResFormation(int idUsr) throws SQLException {
         int nbRes = this.CalculNbRes();
         if (nbRes > 0) {
+            String delStatement = "DELETE FROM Message WHERE idReservationFormation = ?"; //faut supprimer les messages qui concernent cette réservation.
+            PreparedStatement delPrep = conn.prepareStatement(delStatement);
+            delPrep.setInt(1,this.idRes);
+            delPrep.executeQuery();
             String deleteStatement = "DELETE FROM ReservationFormation WHERE idReservationFormation = ?";
             PreparedStatement stmt = conn.prepareStatement(deleteStatement);
             stmt.setInt(1, this.idRes);
@@ -85,7 +93,7 @@ public class ReservationFormationX {
             ResultSet resultSetPrice = stmtPrice.executeQuery();
             stmtPrice.close();
             resultSetPrice.close();
-            this.updateReservations(idUsr, annee, rang);
+            this.updateReservations(idUsr);
             System.out.println("L'annulation a été bien prise en compte.");
         } else {
             System.out.println("L'annulation de cette réservation n'est pas possible.");
@@ -123,31 +131,42 @@ public class ReservationFormationX {
         return false;
     }
 
-    private void updateReservations(int idUsr, int annee, int rang) throws SQLException {
-        for (HashMap.Entry<Integer, Integer> entry : this.reservFormationAttente.entrySet()) {
-            int idRes = entry.getKey();
+    private void updateReservations(int idUsr) throws SQLException {
+        Iterator<Map.Entry<Integer, Integer>> iterator = this.reservFormationAttente.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            Map.Entry<Integer, Integer> entry = iterator.next();
+            int idResAttente = entry.getKey();
             int valeurRangAttente = entry.getValue();
             valeurRangAttente--;
-            this.reservFormationAttente.put(idRes, valeurRangAttente);
+            this.reservFormationAttente.put(idResAttente, valeurRangAttente);
             String updtStatement = "UPDATE ReservationFormation SET rangAttente = ? WHERE idReservationFormation = ?";
             PreparedStatement stmt = conn.prepareStatement((updtStatement));
             stmt.setInt(1, valeurRangAttente);
-            stmt.setInt(2, idRes);
+            stmt.setInt(2, idResAttente);
             ResultSet resultSet = stmt.executeQuery();
-            String message = "idUsr = " + idUsr + " vous êtes passez en position : " + valeurRangAttente + " dans la liste d'attente, merci pour votre patience.";
+            String message = "idRes = " + idResAttente + " - Vous êtes passé en position : " + valeurRangAttente + " dans la liste d'attente, merci pour votre patience.";
             if (valeurRangAttente == 0) {
-                message = "idUsr = " + idUsr + " vous êtes passez en liste principale, merci pour votre patience.";
-                this.reservFormationAttente.remove(idRes);
+                message = "idRes = " + idResAttente + " - Vous êtes passé en liste principale, merci pour votre patience.";
+                iterator.remove();
             }
             stmt.close();
             resultSet.close();
-            String preInsertstmnt = "INSERT INTO Message(message, idUsr, idReservationFormation) VALUES (?, ?)";
-            PreparedStatement stmntInsert = conn.prepareStatement(preInsertstmnt);
-            stmntInsert.setString(1, message);
-            stmntInsert.setInt(2, idUsr);
-            stmntInsert.setInt(3, idRes);
-            stmntInsert.execute();
-            stmntInsert.close();
+            String pregetUsrstmnt = "Select idUsr From ReservationFormation Where idReservationFormation = ?";
+            PreparedStatement getUsrstmnt = conn.prepareStatement(pregetUsrstmnt);
+            getUsrstmnt.setInt(1, idResAttente);
+            ResultSet getUsrResult = getUsrstmnt.executeQuery();
+            if (getUsrResult.next()) {
+                String preInsertstmnt = "INSERT INTO Message(message, idUsr, idReservationFormation) VALUES (?, ?, ?)";
+                PreparedStatement stmntInsert = conn.prepareStatement(preInsertstmnt);
+                stmntInsert.setString(1, message);
+                stmntInsert.setInt(2, getUsrResult.getInt(1));
+                stmntInsert.setInt(3, idResAttente);
+                stmntInsert.execute();
+                stmntInsert.close();
+            }
+            getUsrstmnt.close();
+            getUsrResult.close();
         }
     }
 }
