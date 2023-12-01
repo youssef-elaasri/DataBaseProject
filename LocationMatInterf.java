@@ -13,8 +13,7 @@ public class LocationMatInterf {
                             int idAdherent,
                             HashMap<Lot, Integer> nbPiecesReservees,
                             String dateRecuperation,
-                            String dateRetour,
-                            int sommeRemboursee) {
+                            String dateRetour) {
         this.conn = conn;
         try {
 
@@ -22,7 +21,7 @@ public class LocationMatInterf {
             java.sql.Date dateRecuperation_ = java.sql.Date.valueOf(LocalDate.parse(dateRecuperation, formatter)) ;
             java.sql.Date dateRetour_ = java.sql.Date.valueOf(LocalDate.parse(dateRetour, formatter)) ;
 
-            insertQuery(idAdherent, nbPiecesReservees, dateRecuperation_, dateRetour_, sommeRemboursee);
+            insertQuery(idAdherent, nbPiecesReservees, dateRecuperation_, dateRetour_);
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -33,8 +32,7 @@ public class LocationMatInterf {
     public void insertQuery(int idAdherent,
                             HashMap<Lot, Integer> nbPiecesReservees,
                             java.sql.Date dateRecuperation,
-                            java.sql.Date dateRetour,
-                            int sommeRemboursee) throws SQLException {
+                            java.sql.Date dateRetour) throws SQLException {
 
         try {
             if (!verifIdAdherent(idAdherent) ) {
@@ -55,15 +53,14 @@ public class LocationMatInterf {
                 return;
             }
             String prestmnt = "INSERT INTO LocationMateriel(dateRecup, dateRetour," +
-                    "SommeDue, SommeRemboursee, idUsr) " +
-                    "VALUES (?, ?, ?, ?, ?)";
+                    "SommeDue, idUsr) " +
+                    "VALUES (?, ?, ?, ?)";
             conn.setAutoCommit(false);
             PreparedStatement stmnt = conn.prepareStatement(prestmnt);
             stmnt.setDate(1, dateRecuperation);
             stmnt.setDate(2, dateRetour);
             stmnt.setInt(3, 0);
-            stmnt.setInt(4, sommeRemboursee);
-            stmnt.setInt(5, idAdherent);
+            stmnt.setInt(4, idAdherent);
             stmnt.execute();
             stmnt.close();
 

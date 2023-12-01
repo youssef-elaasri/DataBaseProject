@@ -264,11 +264,9 @@ public class Interface {
                                 String dateRecup = scan.nextLine();
                                 System.out.println("Veuillez entrer la date de retour:");
                                 String dateRetour = scan.nextLine();
-                                System.out.println("Combien souhaitez-vous payer comme avance? ");
-                                String sommeRemboursee = scan.nextLine();
 
                                 //La location:
-                                new LocationMatInterf(inter.getConnection(), query.getidusr(email), piecesReservees, dateRecup, dateRetour, Integer.valueOf(sommeRemboursee));
+                                new LocationMatInterf(inter.getConnection(), query.getidusr(email), piecesReservees, dateRecup, dateRetour);
                                 end = false;
 
                             } 
