@@ -53,12 +53,10 @@ public class ReservationFormationX {
         result.close();
         System.out.println("En Attente = " + this.reservFormationAttente.size());
     }
-    private int CalculNbRes(int idUsr,int annee, int rang) throws SQLException {
-        String nbResStatement = "SELECT COUNT(*) FROM ReservationFormation WHERE annee = ? AND rang = ? AND rangAttente = 0 AND idUsr = ?";
+    private int CalculNbRes() throws SQLException {
+        String nbResStatement = "SELECT COUNT(*) FROM ReservationFormation WHERE idReservationFormation = ?";
         PreparedStatement stmnt = conn.prepareStatement(nbResStatement);
-        stmnt.setInt(1, annee);
-        stmnt.setInt(2, rang);
-        stmnt.setInt(3, idUsr);
+        stmnt.setInt(1, this.idRes);
         ResultSet result = stmnt.executeQuery();
         int res = 0;
         if(result.next()) {
@@ -80,7 +78,7 @@ public class ReservationFormationX {
         conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
         System.out.println("connected");
         InitResAttente(annee, rang);
-        int nbRes = this.CalculNbRes(idUsr,annee,rang);
+        int nbRes = this.CalculNbRes();
         if (nbRes > 0) {
             String deleteStatement = "DELETE FROM ReservationFormation WHERE idReservationFormation = ?";
             PreparedStatement stmt = conn.prepareStatement(deleteStatement);
@@ -143,10 +141,10 @@ public class ReservationFormationX {
             System.out.println("RangAttente = " + valeurRangAttente);
             valeurRangAttente--;
             this.reservFormationAttente.put(idRes, valeurRangAttente);
-            String updtStatement = "UPDATE ReservationFormation SET rangAttente = rangAttente - 1 WHERE annee = ? AND rang = ?";
+            String updtStatement = "UPDATE ReservationFormation SET rangAttente = ? WHERE idReservationFormation = ?";
             PreparedStatement stmt = conn.prepareStatement((updtStatement));
-            stmt.setInt(1, annee);
-            stmt.setInt(2, rang);
+            stmt.setInt(1, valeurRangAttente);
+            stmt.setInt(2, idRes);
             ResultSet resultSet = stmt.executeQuery();
             String message = "idUsr = " + idUsr + " vous êtes passez en position : " + valeurRangAttente + " dans la liste d'attente, merci pour votre patience.";
             if (valeurRangAttente == 0) {
