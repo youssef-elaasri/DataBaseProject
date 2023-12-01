@@ -21,20 +21,19 @@ public class ReservationFormation {
         this.rang = formation.getRang();
         try {
             // Enregistrement du driver Oracle
-            //System.out.print("Loading Oracle driver... ");
+            System.out.print("Loading Oracle driver... ");
             DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
-            //System.out.println("loaded");
+            System.out.println("loaded");
 
             // Etablissement de la connection
-            //System.out.print("Connecting to the database... ");
+            System.out.print("Connecting to the database... ");
             conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
-            //System.out.println("connected");
+            System.out.println("connected");
             this.InitResAttente();
             this.InitIdRes();
             if( verifyAdherent(idUsr) && verifyFormation(this.annee, this.rang) ) {
                 if (verifyDisponibilite(this.annee, this.rang)) {
                     insertQuery(0, this.annee, this.rang, idUsr);
-                    //somme due for adhérent ? Update it with calculPrix.
                 } else {
                     for (HashMap.Entry<Integer, Integer> entry : this.reservFormationAttente.entrySet()) {
                         int valeurRangAttente = entry.getValue();
@@ -48,7 +47,6 @@ public class ReservationFormation {
                     }
                     insertQuery(reservFormationAttente.size() , this.annee, this.rang, idUsr);
                     System.out.println("Pas assez de place désolé. Rang en liste d'attente: " + reservFormationAttente.size());
-                    //when he is off the 'liste d'attente' update the sommedue also.
                 }
             }
             conn.close();
@@ -122,6 +120,7 @@ public class ReservationFormation {
         stmnt.setInt(5, idUsr);
         System.out.println("La réservation a bien été prise en compte. idRes = " + this.idRes);
         stmnt.execute();
+        stmnt.close();
         String priceStatement = "UPDATE Utilisateur SET SommeDue = SommeDue + ? WHERE idUSr = ?";
         PreparedStatement stmtPrice = conn.prepareStatement(priceStatement);
         stmtPrice.setInt(1, this.calculPrix(annee,rang));
@@ -176,7 +175,7 @@ public class ReservationFormation {
         }
         stmnt.close();
         result.close();
-        System.out.println("La formation dont l'année est " + anneeFormation + " et le rang est " + rangFormation + " n'est pas disponible.");
+        System.out.println("La formation dont l'annee est " + anneeFormation + " et le rang est " + rangFormation + " n'est pas disponible.");
         return false;
     }
 
