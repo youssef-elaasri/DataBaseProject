@@ -27,19 +27,34 @@ public class ReservationRefuge {
             conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
             //System.out.println("connected");
             int nbrRepas = repas.length;
-
-            if(     verifyIdUsr(idUsr) &&
-                    verifyRefuge(emailRefuge) &&
-                    verifyDate(emailRefuge, date) &&
-                    verifyNbrNuitsRepas(emailRefuge, nuitsReserves, nbrRepas) &&
-                    verifyRepas(repas) ) {
-
-                int prix = calculPrix(emailRefuge, nuitsReserves,  repas);
-
-
-                insertQuery(nuitsReserves, nbrRepas, prix, emailRefuge, idUsr, date);
-
+            System.out.println("1");
+            if(!verifyIdUsr(idUsr)){
+                System.out.println("L'identifiant " + idUsr + " n'existe pas");
+                return;
             }
+            System.out.println("2");
+            if(!verifyRefuge(emailRefuge)){
+                System.out.println("Le refuge dont l'email est " + emailRefuge + " n'existe pas");
+                return;
+            }
+            System.out.println("3");
+            if(!verifyDate(emailRefuge, date)){
+                System.err.println("Le refuge sera fermé à cette date :(");
+                return;
+            }
+            System.out.println("4");
+            if(!verifyNbrNuitsRepas(emailRefuge, nuitsReserves, nbrRepas)){
+                return;
+            }
+            System.out.println("5");
+            if(!verifyRepas(repas)){
+                System.out.println("Un repas n'est pas valide!");
+                return;
+            }
+            System.out.println("6");
+            int prix = calculPrix(emailRefuge, nuitsReserves,  repas);
+            insertQuery(nuitsReserves, nbrRepas, prix, emailRefuge, idUsr, date);
+
             conn.close();
             return;
 
@@ -138,7 +153,6 @@ public class ReservationRefuge {
                 result.close();
                 return true;
             }
-            System.out.println("L'identifiant " + idUsr + " n'existe pas");
         }
 
         stmt.close();
@@ -157,8 +171,6 @@ public class ReservationRefuge {
                 result.close();
                 return true;
             }
-            System.out.println("Le refuge dont l'email est " + emailRefuge + " n'existe pas");
-
         }
         return false;
     }
@@ -223,14 +235,6 @@ public class ReservationRefuge {
             LocalDate ouverture = result.getDate(1).toLocalDate();
             LocalDate fermeture = result.getDate(2).toLocalDate();
             if(fermeture.isBefore(ouverture)) fermeture = fermeture.plusYears(1);
-
-            System.out.println(localDate.isAfter(ouverture));
-            System.out.println(localDate.isBefore(fermeture));
-
-            System.out.println(localDate);
-
-
-
             stmntDate.close();
             result.close();
             return localDate.isAfter(ouverture) && localDate.isBefore(fermeture); //TODO no such example
@@ -241,13 +245,9 @@ public class ReservationRefuge {
     private Boolean verifyRepas(String ... repas){
         for (String unRepas : repas){
             if(!Repas.contains(unRepas)){
-                System.out.println(unRepas + " n'est pas un repas valide");
                 return false;
             }
         }
         return true;
     }
-    /*public static void main(String[] args) {
-        new ReservationRefuge(1, "refuge1@gmail.com", 1, "diner", "diner", "souper");
-    }*/
 }
