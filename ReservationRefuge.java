@@ -65,6 +65,64 @@ public class ReservationRefuge {
     }
 
     /**
+     * Deletes a reservation
+     * @param iDRefuge The refuge's ID
+     */
+    public ReservationRefuge(int iDRefuge){
+        try {
+            // Registering the Oracle driver
+            DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+
+            // Establishing the connection
+            conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
+
+            if(verifyIdRefuge(iDRefuge)){
+                //String sectionGeo = deleteQuery(iDRefuge);
+                //suggestRefuge(sectionGeo);
+            }
+        } catch (SQLException e) {
+            System.err.println("failed");
+            e.printStackTrace(System.err);
+        }
+
+    }
+
+    private Boolean verifyIdRefuge(int iDRefuge) throws SQLException {
+
+        String refugeExistenceStatement = "SELECT COUNT(*) FROM RESERVATIONREFUGE WHERE IDRESREFUGE = ?";
+        PreparedStatement stmt = conn.prepareStatement((refugeExistenceStatement));
+        stmt.setInt(1, iDRefuge);
+        ResultSet result = stmt.executeQuery();
+        if (result.next()) {
+            if (result.getInt(1) > 0) {
+                stmt.close();
+                result.close();
+                return true;
+            }
+            System.out.println("cet ID " + iDRefuge + " N'existe pas");
+        }
+
+        stmt.close();
+        result.close();
+
+        return false;
+    }
+
+
+    //TODO
+    private String deleteQuery(int iDRefuge){
+        String sectionGeoExistenceStatement = "SELECT secteurGeo from (RESERVATIONREFUGE join Refuge R on R.email = RESERVATIONREFUGE.email) where ReservationRefuge.idResRefuge = ?";
+        PreparedStatement stmt = conn.prepareStatement((sectionGeoExistenceStatement));
+        stmt.setInt(1, iDRefuge);
+        ResultSet result = stmt.executeQuery();
+        return "";
+    }
+
+    private void suggestRefuge(String sectionGeo){
+
+    }
+
+    /**
      * Executes the insertion query into the ReservationRefuge table.
      *
      * @param nuitsReserves The number of nights reserved.
