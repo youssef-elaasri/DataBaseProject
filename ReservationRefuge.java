@@ -66,41 +66,51 @@ public class ReservationRefuge {
     }
 
     private void insertQuery(int nuitsReserves, int nbrRepas, int prix, String email, int idUsr, String date) throws SQLException {
-        if (prix == -1){
-            return ;
+        try {
+            conn.setAutoCommit(false);
+            if (prix == -1) {
+                return;
+            }
+
+            // Get the current time
+            LocalTime currentTime = LocalTime.now();
+
+            // Get the current hour
+            int currentHour = currentTime.getHour();
+
+            // Format the date
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            java.sql.Date sqlDate = java.sql.Date.valueOf(LocalDate.parse(date, formatter));
+
+            // Prepare the SQL statement for inserting the reservation
+            String prestmnt = "INSERT INTO ReservationRefuge (dateResRefuge, heureResRefuge," +
+                    "nbNuitResRefuge, nbRepasResRefuge, prixResRefuge, email, idUsr) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement stmnt = conn.prepareStatement(prestmnt);
+            stmnt.setDate(1, sqlDate);
+            stmnt.setInt(2, currentHour);
+            stmnt.setInt(3, nuitsReserves);
+            stmnt.setInt(4, nbrRepas);
+            stmnt.setInt(5, prix);
+            stmnt.setString(6, email);
+            stmnt.setInt(7, idUsr);
+
+            // Execute the insertion query
+            stmnt.execute();
+
+            prestmnt = "UPDATE Utilisateur SET SommeDue = SommeDue + ? WHERE idUSr = ?";
+            stmnt = conn.prepareStatement(prestmnt);
+            stmnt.setInt(1, prix);
+            stmnt.setInt(2, idUsr);
+
+            stmnt.execute();
+
+        } catch (SQLException e) {
+            System.out.println("Failed");
+            conn.rollback();
+        } finally {
+            conn.setAutoCommit(true);
         }
-
-        //java.sql.Date today = java.sql.Date.valueOf(LocalDate.now()) ;
-        // Get the current time
-        LocalTime currentTime = LocalTime.now();
-
-        // Get the current hour
-        int currentHour = currentTime.getHour();
-
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-        java.sql.Date sqlDate = java.sql.Date.valueOf(LocalDate.parse(date, formatter)) ;
-
-
-        String prestmnt = "INSERT INTO ReservationRefuge (dateResRefuge, heureResRefuge," +
-                "nbNuitResRefuge, nbRepasResRefuge, prixResRefuge, email, idUsr) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        PreparedStatement stmnt = conn.prepareStatement(prestmnt);
-        stmnt.setDate(1, sqlDate);
-        stmnt.setInt(2, currentHour);
-        stmnt.setInt(3, nuitsReserves);
-        stmnt.setInt(4, nbrRepas);
-        stmnt.setInt(5, prix);
-        stmnt.setString(6, email);
-        stmnt.setInt(7, idUsr);
-
-        stmnt.execute();
-
-
-
-
-
     }
     private int calculPrix(String  emailRefuge, int nuitsReserves, String ... repas) throws SQLException {
         int prixReservationNuits = 0;
