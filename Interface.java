@@ -240,6 +240,7 @@ public class Interface {
                         boolean end = true;
                         while (end) {
                             String option = scan.nextLine();
+                            // L'utilisateur choisit 1 pour louer un matériel
                             if (option.equals("1")) {
                                 System.out.println("");
                                 //initialisation des lot à réserver
@@ -271,7 +272,9 @@ public class Interface {
                                 new LocationMatInterf(inter.getConnection(), query.getidusr(email), piecesReservees, dateRecup, dateRetour, Integer.valueOf(sommeRemboursee));
                                 end = false;
 
-                            } else if (option.equals("2")) {
+                            } 
+                            // L'utilisateur choisit 2 pour retourner un matériel
+                            else if (option.equals("2")) {
                                 System.out.println("Avez-vous abîmé/perdu des pièces? ");
                                 String reponse = scan.nextLine();
                                 boolean cassee = reponse.equals("oui");
@@ -301,6 +304,7 @@ public class Interface {
                         }
                         connecte = autreOptions(scan);
                         break;
+
                     case "7": //Supprimer compte
                         query.deleteAll(email);
                         System.out.println("Votre compte a été supprimé avec succès.");

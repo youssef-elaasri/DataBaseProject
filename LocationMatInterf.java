@@ -22,13 +22,12 @@ public class LocationMatInterf {
             java.sql.Date dateRecuperation_ = java.sql.Date.valueOf(LocalDate.parse(dateRecuperation, formatter)) ;
             java.sql.Date dateRetour_ = java.sql.Date.valueOf(LocalDate.parse(dateRetour, formatter)) ;
 
-            insertQuery(idAdherent, nbPiecesReservees, dateRetour_, dateRecuperation_, sommeRemboursee);
+            insertQuery(idAdherent, nbPiecesReservees, dateRecuperation_, dateRetour_, sommeRemboursee);
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
-
 
 
     public void insertQuery(int idAdherent,
@@ -38,49 +37,59 @@ public class LocationMatInterf {
                             int sommeRemboursee) throws SQLException {
 
         try {
-            if (
-                verifIdAdherent(idAdherent) &&
-                verifDateRecup(dateRecuperation) &&
-                verifDateRetour(dateRecuperation, dateRetour) &&
-                verifdisponibilite(dateRecuperation, dateRetour, nbPiecesReservees)
-            ){
-                String prestmnt = "INSERT INTO LocationMateriel(dateRecup, dateRetour," +
-                        "SommeDue, SommeRemboursee, idUsr) " +
-                        "VALUES (?, ?, ?, ?, ?)";
+            if (!verifIdAdherent(idAdherent) ) {
+                System.out.println("Id Adhérent invalide!");
+                System.out.println("L'identifiant " + idAdherent + " n'existe pas");
+                return;
+            }
+            if (!verifDateRecup(dateRecuperation)) {
+                System.out.println("Date de récupéération invalide!");
+                return;
+            }
+            if (!verifDateRetour(dateRecuperation, dateRetour)) {
+                System.out.println("La durée de location ne doit pas dépasser 14 jours!");
+                return;
+            }
+            if (!verifdisponibilite(dateRecuperation, dateRetour, nbPiecesReservees)) {
+                System.out.println("Ce lot n'est pas disponible!");
+                return;
+            }
+            String prestmnt = "INSERT INTO LocationMateriel(dateRecup, dateRetour," +
+                    "SommeDue, SommeRemboursee, idUsr) " +
+                    "VALUES (?, ?, ?, ?, ?)";
+            conn.setAutoCommit(false);
+            PreparedStatement stmnt = conn.prepareStatement(prestmnt);
+            stmnt.setDate(1, dateRecuperation);
+            stmnt.setDate(2, dateRetour);
+            stmnt.setInt(3, 0);
+            stmnt.setInt(4, sommeRemboursee);
+            stmnt.setInt(5, idAdherent);
+            stmnt.execute();
+            stmnt.close();
+
+            prestmnt = "SELECT MAX(idLocationMateriel) FROM LocationMateriel ";
+            PreparedStatement stmt = conn.prepareStatement(prestmnt);
+            ResultSet res = stmt.executeQuery();
+            res.next();
+            int id = res.getInt(1);
+            System.out.println("id = "+ id);
+
+            for (Lot lot : nbPiecesReservees.keySet()) {
+                prestmnt = "INSERT INTO ReservationPieces(nbPiecesReservees,nbPiecesCasseesPerdues," +
+                        "marque,modele,annee,IdLocationMateriel) " +
+                        "VALUES (?, ?, ?, ?, ?,?)";
                 conn.setAutoCommit(false);
-                PreparedStatement stmnt = conn.prepareStatement(prestmnt);
-                stmnt.setDate(1, dateRecuperation);
-                stmnt.setDate(2, dateRetour);
-                stmnt.setInt(3, 0);
-                stmnt.setInt(4, sommeRemboursee);
-                stmnt.setInt(5, idAdherent);
-                stmnt.execute();
-                stmnt.close();
-
-
-                prestmnt = "SELECT MAX(idLocationMateriel) FROM LocationMateriel ";
-                PreparedStatement stmt = conn.prepareStatement(prestmnt);
-                ResultSet res = stmt.executeQuery();
-                res.next();
-                int id = res.getInt(1);
-
-                for (Lot lot : nbPiecesReservees.keySet()) {
-                    prestmnt = "INSERT INTO ReservationPieces(nbPiecesReservees,nbPiecesCasseesPerdues," +
-                            "marque,modele,annee,IdLocationMateriel) " +
-                            "VALUES (?, ?, ?, ?, ?,?)";
-                    conn.setAutoCommit(false);
-                    PreparedStatement stmnt2 = conn.prepareStatement(prestmnt);
-                    stmnt2.setInt(1, nbPiecesReservees.get(lot));
-                    stmnt2.setInt(2, 0);
-                    stmnt2.setString(3, lot.marque);
-                    stmnt2.setString(4, lot.modele);
-                    stmnt2.setInt(5, lot.annee);
-                    stmnt2.setInt(6, id);
-                    stmnt2.execute();
-                    stmnt2.close();
-                }
-                System.out.println("Votre location a été bien prise en compte :) ");
-            } 
+                PreparedStatement stmnt2 = conn.prepareStatement(prestmnt);
+                stmnt2.setInt(1, nbPiecesReservees.get(lot));
+                stmnt2.setInt(2, 0);
+                stmnt2.setString(3, lot.marque);
+                stmnt2.setString(4, lot.modele);
+                stmnt2.setInt(5, lot.annee);
+                stmnt2.setInt(6, id);
+                stmnt2.execute();
+                stmnt2.close();
+            }
+            System.out.println("Votre location a été bien prise en compte :) .");
         } catch (SQLException e) {
             try {
                 conn.rollback();
@@ -98,6 +107,8 @@ public class LocationMatInterf {
         }
     }
 
+
+
     private boolean verifIdAdherent ( int idAdherent) throws SQLException {
         String adherentExistenceStatement = "SELECT * FROM Adherent WHERE idUsr = ?";
         PreparedStatement stmt = conn.prepareStatement((adherentExistenceStatement));
@@ -108,7 +119,6 @@ public class LocationMatInterf {
             result.close();
             return true;
         }
-        System.out.println("L'identifiant " + idAdherent + " n'existe pas");
         stmt.close();
         result.close();
         return false;
@@ -124,7 +134,6 @@ public class LocationMatInterf {
     private boolean verifDateRetour (java.sql.Date dateRecup, java.sql.Date dateRetour){
         LocalDate localDateRecup = dateRecup.toLocalDate();
         LocalDate localDateRetour = dateRetour.toLocalDate();
-
 
         if (!localDateRetour.isAfter(localDateRecup)) {
             return false;

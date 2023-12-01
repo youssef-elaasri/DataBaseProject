@@ -57,50 +57,58 @@ public class LocationMateriel {
                             int sommeRemboursee) throws SQLException {
 
         try {
-            if (
-                verifIdAdherent(idAdherent) &&
-                verifDateRecup(dateRecuperation) &&
-                verifDateRetour(dateRecuperation, dateRetour) &&
-                verifdisponibilite(dateRecuperation, dateRetour, nbPiecesReservees)
-            ){
-                String prestmnt = "INSERT INTO LocationMateriel(dateRecup, dateRetour," +
-                        "SommeDue, SommeRemboursee, idUsr) " +
-                        "VALUES (?, ?, ?, ?, ?)";
-                conn.setAutoCommit(false);
-                PreparedStatement stmnt = conn.prepareStatement(prestmnt);
-                stmnt.setDate(1, dateRecuperation);
-                stmnt.setDate(2, dateRetour);
-                stmnt.setInt(3, 0);
-                stmnt.setInt(4, sommeRemboursee);
-                stmnt.setInt(5, idAdherent);
-                stmnt.execute();
-                stmnt.close();
-
-
-                prestmnt = "SELECT MAX(idLocationMateriel) FROM LocationMateriel ";
-                PreparedStatement stmt = conn.prepareStatement(prestmnt);
-                ResultSet res = stmt.executeQuery();
-                res.next();
-                int id = res.getInt(1);
-
-                for (Lot lot : nbPiecesReservees.keySet()) {
-                    prestmnt = "INSERT INTO ReservationPieces(nbPiecesReservees,nbPiecesCasseesPerdues," +
-                            "marque,modele,annee,IdLocationMateriel) " +
-                            "VALUES (?, ?, ?, ?, ?,?)";
-                    conn.setAutoCommit(false);
-                    PreparedStatement stmnt2 = conn.prepareStatement(prestmnt);
-                    stmnt2.setInt(1, nbPiecesReservees.get(lot));
-                    stmnt2.setInt(2, 0);
-                    stmnt2.setString(3, lot.marque);
-                    stmnt2.setString(4, lot.modele);
-                    stmnt2.setInt(5, lot.annee);
-                    stmnt2.setInt(6, id);
-                    stmnt2.execute();
-                    stmnt2.close();
-                }
-            } else {
-                System.out.println("Cannot insert query due to validation failures.");
+            if (!verifIdAdherent(idAdherent) ) {
+                System.out.println("Id Adhérent invalide!");
+                return;
             }
+            if (!verifDateRecup(dateRecuperation)) {
+                System.out.println("Date de récupéération invalide!");
+                return;
+            }
+            if (!verifDateRetour(dateRecuperation, dateRetour)) {
+                System.out.println("La durée de location ne doit pas dépasser 14 jours!");
+                return;
+            }
+            if (!verifdisponibilite(dateRecuperation, dateRetour, nbPiecesReservees)) {
+                System.out.println("Cannot insert query due to validation failures.");
+                return;
+            }
+            String prestmnt = "INSERT INTO LocationMateriel(dateRecup, dateRetour," +
+                    "SommeDue, SommeRemboursee, idUsr) " +
+                    "VALUES (?, ?, ?, ?, ?)";
+            conn.setAutoCommit(false);
+            PreparedStatement stmnt = conn.prepareStatement(prestmnt);
+            stmnt.setDate(1, dateRecuperation);
+            stmnt.setDate(2, dateRetour);
+            stmnt.setInt(3, 0);
+            stmnt.setInt(4, sommeRemboursee);
+            stmnt.setInt(5, idAdherent);
+            stmnt.execute();
+            stmnt.close();
+
+
+            prestmnt = "SELECT MAX(idLocationMateriel) FROM LocationMateriel ";
+            PreparedStatement stmt = conn.prepareStatement(prestmnt);
+            ResultSet res = stmt.executeQuery();
+            res.next();
+            int id = res.getInt(1);
+
+            for (Lot lot : nbPiecesReservees.keySet()) {
+                prestmnt = "INSERT INTO ReservationPieces(nbPiecesReservees,nbPiecesCasseesPerdues," +
+                        "marque,modele,annee,IdLocationMateriel) " +
+                        "VALUES (?, ?, ?, ?, ?,?)";
+                conn.setAutoCommit(false);
+                PreparedStatement stmnt2 = conn.prepareStatement(prestmnt);
+                stmnt2.setInt(1, nbPiecesReservees.get(lot));
+                stmnt2.setInt(2, 0);
+                stmnt2.setString(3, lot.marque);
+                stmnt2.setString(4, lot.modele);
+                stmnt2.setInt(5, lot.annee);
+                stmnt2.setInt(6, id);
+                stmnt2.execute();
+                stmnt2.close();
+            }
+            
         } catch (SQLException e) {
             try {
                 conn.rollback();
