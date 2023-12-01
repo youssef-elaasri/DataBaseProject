@@ -48,7 +48,7 @@ public class Interface {
         System.out.println("2 : Afficher nos formations polyvalentes");
         System.out.println("3 : Afficher nos matériels de qualité");
         System.out.println("4 : Faire une réservation de refuge");
-        System.out.println("5 : Faire une réservation de formation");
+        System.out.println("5 : Faire une réservation de formation ou annulation");
         System.out.println("6 : Faire une location de matériel ou retourner un matériel");
         System.out.println("7 : Supprimer votre compte");
         System.out.println("8 : Se déconnecter");
@@ -189,10 +189,10 @@ public class Interface {
                         System.out.println("Veuillez entrez le nombre de nuitées:");
                         String nuits = scan.nextLine();
                         ArrayList<String> listeDeRepas = new ArrayList<>();
+                        System.out.println("Veuillez ajoutez le ou les repas que vous voulez.");
+                        System.out.println("Si vouz voulez plus d'un repas, tapez Entrer après chaque repas.");
+                        System.out.println("si vous ne voulez pas de repas appuyez sur Entrer.");
                         while (true) {
-                            System.out.println("Veuillez ajoutez le ou les repas que vous voulez.");
-                            System.out.println("Si vouz voulez plus d'un repas, tapez Entrer qprès chaque repas.");
-                            System.out.println("si vous ne voulez pas de repas appuyez sur Entrer.");
                             String repas = scan.nextLine();
                             if (repas.equals("")) {
                                 break;
@@ -205,8 +205,30 @@ public class Interface {
                         connecte = autreOptions(scan);
                         break;
 
-                    case "5":
-                        query.showCourses();
+                    case "5": //Réservation/Annulation formation
+                        System.out.println("");
+                        System.out.println("1 : Réservation");
+                        System.out.println("2 : Annulation");
+                        System.out.println("");
+                        String optionForm = scan.nextLine();
+                        boolean boucle = true;
+                        while (boucle){
+                            if (optionForm.equals("1")) {
+                                System.out.println("");
+                                System.out.println("Veuillez entrer la formation que vous voulez réserver.");
+                                System.out.println("Pour cela, veuillez indiquer l'année:");
+                                String anneeForm = scan.nextLine();
+                                System.out.println("Veuillez indiquer le rang de la formation:");
+                                String rang = scan.nextLine();
+                                Formation form = new Formation(Integer.valueOf(anneeForm),Integer.valueOf(rang));
+                                new ReservationFormation(query.getidusr(email),form);
+                                boucle = false;
+                            } else if (optionForm.equals("2")) {
+
+                                boucle = false;
+                            } else System.out.println("Choisissez 1 ou 2");
+                        }
+                        connecte = autreOptions(scan);
                         break;
 
                     case "6": // Location ou Retour du matériel
