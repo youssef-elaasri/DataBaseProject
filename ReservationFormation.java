@@ -32,7 +32,6 @@ public class ReservationFormation {
                     System.out.println("Oups, pas assez de place désolé. Rang en liste d'attente: " + reservFormationAttente.size());
                 }
             }
-            conn.close();
             return;
         }   catch (SQLException e) {
             System.err.println("failed");

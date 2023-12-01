@@ -19,7 +19,6 @@ public class ReservationFormationX {
             if (verifyAdherent(idUsr)) {
                 this.InitResAttente(annee, rang);
             }
-            conn.close();
             return;
         }   catch (SQLException e) {
             System.err.println("failed");
@@ -78,7 +77,6 @@ public class ReservationFormationX {
         } else {
             System.out.println("L'annulation de cette réservation n'est pas possible.");
         }
-        conn.close();
     }
 
     private int calculPrix(int anneeFormation, int rangFormation) throws SQLException {

@@ -26,7 +26,7 @@ public class Interface {
 
             System.out.print("Connecting to the database... ");
             conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
-            conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+            //conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
             System.out.println("connected");
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -238,7 +238,7 @@ public class Interface {
                                 System.out.println("Veuillez indiquer le rang de la formation:");
                                 String rang = scan.nextLine();
                                 Formation form = new Formation(Integer.valueOf(anneeForm),Integer.valueOf(rang));
-                                new ReservationFormation(query.getidusr(email),form);
+                                new ReservationFormation(inter.getConnection(), query.getidusr(email),form);
                                 boucle = false;
                             } else if (optionForm.equals("2")) {
                                 System.out.println("");
@@ -250,7 +250,7 @@ public class Interface {
                                 System.out.println("Veuillez indiquer l'ID de la réservation formation:");
                                 String idRes = scan.nextLine();
                                 Formation formAnnul = new Formation(Integer.valueOf(anneeReserv),Integer.valueOf(rangReserv));
-                                ReservationFormationX reserv = new ReservationFormationX(Integer.valueOf(idRes), query.getidusr(email), formAnnul);
+                                ReservationFormationX reserv = new ReservationFormationX(inter.getConnection(),Integer.valueOf(idRes), query.getidusr(email), formAnnul);
                                 reserv.AnnulationResFormation(query.getidusr(email),Integer.valueOf(anneeReserv),Integer.valueOf(rangReserv));
                                 boucle = false;
                             } else System.out.println("Choisissez 1 ou 2");
