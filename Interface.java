@@ -130,7 +130,6 @@ public class Interface {
             // Afficher à l'utilisateur les options
             printOptions();
 
-
             boolean connecte = true;
             while (connecte) {
                 String choix = scan.nextLine();
@@ -151,21 +150,7 @@ public class Interface {
                                 c = false;
                             } else System.out.println("Choisissez 1 ou 2");
                         }
-                        /*System.out.println("");
-                        System.out.println("1 : Choisir une autre option");
-                        System.out.println("2 : Se déconnecter");
-                        boolean choix4 = true;
-                        while (choix4) {
-                            String option2 = scan.nextLine();
-                            if (option2.equals("1")) { //Choisir une autre option
-                                printOptions();
-                                break;
-                            } else if (option2.equals("2")) { //Quitter
-                                System.out.println("A la prochaine.");
-                                choix4 = false;
-                                connecte= false;
-                            }
-                        }*/
+
                         connecte = autreOptions(scan);
                         break;
 
@@ -203,9 +188,7 @@ public class Interface {
                         String emailRef = scan.nextLine();
                         System.out.println("Veuillez entrez le nombre de nuitées:");
                         String nuits = scan.nextLine();
-
                         ArrayList<String> listeDeRepas = new ArrayList<>();
-
                         while (true) {
                             System.out.println("Veuillez ajoutez le ou les repas que vous voulez.");
                             System.out.println("Si vouz voulez plus d'un repas, tapez Entrer qprès chaque repas.");
@@ -216,21 +199,15 @@ public class Interface {
                             }
                             listeDeRepas.add(repas);
                         }
-
-
                         System.out.println("Veuillez entrez la date de réservation sous la forme YYYY-MM-DD:");
                         String date = scan.nextLine();
                         new ReservationRefuge(query.getidusr(email), emailRef, Integer.valueOf(nuits), date, listeDeRepas.toArray(new String[0]));
-
                         connecte = autreOptions(scan);
                         break;
-
 
                     case "5":
                         query.showCourses();
                         break;
-
-
 
                     case "6": // Location ou Retour du matériel
                         System.out.println("");
