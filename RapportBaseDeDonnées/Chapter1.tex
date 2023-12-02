@@ -70,6 +70,31 @@ Le modèle relationnel de la base de données reflète la structure définie dan
 
 \item    DatePeremption : La table \textbf{DatePeremption} stocke les dates de péremption associées aux lots de matériel, liées par la table \textbf{A\_pour\_datePeremption}.
 \end{enumerate}
+
+On obtient ainsi le shèma relationnel suivant:\\
+\textbf{CompteUtilisateur}( \underline{idUsr} )\\
+\textbf{Utilisateur}( \underline{emailUsr}, pwdUsr, nomUsr, prenomUsr, adressUsr, idUsr, sommeDue, sommeRemboursee)\\
+\textbf{Adherent}( \underline{idUsr} )\\
+\textbf{Refuge}(\underline{email}, nimRefuge, secteurGeo, dateOuverture, dateFermeture, nbPlacesRepas, nbPlacesDormir, texteRepresentatif, typePaiement, prixNuitee)\\
+\textbf{RefNumTel}( \underline{numTel}, email)\\
+\textbf{ReservationRefuge}( \underline{idResRefuge}, dateResRefuge, heureResRefuge, nbNuitResRefuge, nbRepasResRefuge, prixResRefuge, email, idUsr)\\
+\textbf{Repas}( \underline{repas} )\\
+\textbf{Propose}( \underline{email}, \underline{repas}, prix)\\
+\textbf{Formation}( \underline{annee}, \underline{rang}, nomFormation, dateDemarrage, dureeFormation, nbPlacesFormation, descriptionFormation, prixFormation)\\
+\textbf{ReservationFormation}(\underline{idReservationFormation}, rangAttente, annee, rang, idUsr)\\
+\textbf{Activite}(\underline{typeActivite})\\
+\textbf{A\_pour\_activite}(\underline{anne}, \underline{rang}, \underline{typeActivite}, rang, idUsr)\\
+\textbf{LotMateriel}(\underline{marque}, \underline{modele}, \underline{annee}, nbPieces, prix, catgorie)\\
+\textbf{Utilise}(\underline{marque}, \underline{modele}, \underline{annee}, \underline{typeActivite})\\
+\textbf{Texte}(\underline{texte}, marque, modele, annee)\\
+\textbf{Categorie}(\underline{categorie})\\
+\textbf{A\_comme\_sous\_categorie}(categorie, \underline{sousCategorie})\\
+\textbf{LocationMateriel}(\underline{idLocationMateriel}, dateRecup, dateRetour, idUsr)\\
+\textbf{ReservationPieces}(\underline{marque}, \underline{modele}, \underline{annee}, \underline{idLocationMateriel}, nbPiecesReservees, nbPiecesCasseesPerdues)\\
+\textbf{DatePeremption}(\underline{datePeremption})\\
+\textbf{A\_pour\_date\_peremption}(\underline{marque}, \underline{modele}, \underline{annee}, datePeremption)\\
+
+
 Chaque table est conçue pour refléter les relations et les contraintes établies lors de la phase de conception, garantissant ainsi une représentation cohérente des données du projet.
 
 \subsection{Formes Normales}
