@@ -79,7 +79,23 @@ Chaque table est conçue pour refléter les relations et les contraintes établi
 \subsection{Parcours des formations/refuges/matériels disponibles}
 \subsection{Réservation de Refuge}
 \subsection{Réservation de Formation}
+Pour la réservation d'une formation (et éventuelement l'annulation d'une réservation), il faut que l'utilisateur fournisse l'année et le rang qui identifient la formation (ou bien l'idReservationFormation pour l'annuler). Puis la fonctionnalité se réalise en suivant plusieurs étapes:
+\begin{enumerate}
+    \item L’Analyse des réservations qui existent déjà:\\
+Cette étape est nécessaire pour savoir l'état de la formation que l'on veut réserver: si elle est pleine ou pas. Ainsi, il faut calculer le nombre de réservations déja effectués, en utilisant la requête : SELECT COUNT(*) FROM ReservationFormation WHERE annee = ? AND rang = ? AND rangAttente = 0;\\
+Puis, on compare ce résultat avec le nombre de places que la formation offre. Et si, la formation est déjà pleine. La réservation sera mise en liste d'attente et son rang sera calculer par la requête : SELECT * FROM ReservationFormation WHERE annee = ? AND rang = ? AND rangAttente >= 1;\\
 
+    \item L’Insertion de la réservation:\\
+En tenant compte de l'analyse qu'on vient de faire, on doit passer à l'insertion de la réservation dans notre base de données. Mais un problème s'est posé lors de notre 1ère approche. Puisqu'on doit renvoyer à l'utilisateur l'id de sa réservation pour qu'il puisse l'annuler après s'il veut. En mettant en place une séquence qui génère automatiquement les identifiants, il sera difficile de connaître l'id qui a été utilisé (un utilisateur peut réserver la même formation plusieurs fois...). Ainsi, on choisit les identifiants manuellement, en utilisant les requêtes suivantes: SELECT MAX(idReservationFormation) FROM ReservationFormation;\\
+INSERT INTO ReservationFormation(idReservationFormation, rangAttente, annee,rang, idUsr) VALUES (?, ?, ?, ?, ?);\\
+Avec (dans le cas où la réservation est mise dans la liste d'attente): rangAttente = taille de la hashMap où on stocke les réservations en liste d'attente + 1. (On  va plus détailler sur le choix de la hashMap dans la partie qui suit car elle n'est pas réellement utilisé que dans le cas d'une annulation)
+
+    \item L’annulation d’une réservation:\\
+Dans le cas où l'utilisateur souhaite annuler sa réservation, on crée une HashMap qui contient les réservations qui sont aussi en liste d'attente mais qui ont un rangAttente supérieur à celui de la réservation qu'on veut annuler (clé = idReservationFormation et valeur = rangAttente), car c'est eux qui seront touchées par cette annulation. Puis, on supprime la réservation de la base de données par : DELETE FROM ReservationFormation WHERE idReservationFormation = ?;\\
+Et pour chaque réservation dans la hashMap, on decrémente son rangAttente par 1 en utilisant la requête :
+UPDATE ReservationFormation SET rangAttente = rangAttente - 1 WHERE idReservationFormation = ?;\\
+Pour chacune de ces réservations, on insère dans un tableau Message de notre base de données un message qui signale le développement de la situation de leur réservation (Passage en liste principale par exemple). Et chaque utilisateur pourra lire ses messages lorsqu'il le souhaite comme une sorte de boîte mail.
+\end{enumerate}
 
 \subsection{Location et Retour de Matériel}
 La location et le retour du matériel sont des étapes clés du cahier des charges, et nous nous sommes efforcés de respecter les souhaits du client.
