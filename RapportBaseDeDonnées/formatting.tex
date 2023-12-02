@@ -63,3 +63,20 @@
 \renewcommand*{\nameyeardelim}{\addcomma\addspace}
 \renewbibmacro{in:}{%
   \ifentrytype{article}{}{\printtext{\bibstring{in}\intitlepunct}}} % removes "In" preceeding journal title
+
+% Define SQL language settings
+\lstdefinestyle{SQL}{
+  language=SQL,
+  basicstyle=\ttfamily\small,
+  commentstyle=\color{gray},
+  keywordstyle=\color{blue},
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=5pt,
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=2
+}
+
+\usepackage{float}

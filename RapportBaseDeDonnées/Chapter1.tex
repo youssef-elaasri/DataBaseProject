@@ -97,6 +97,54 @@ Enfin, la troisième fonctionnalité offre aux adhérents la possibilité de vis
 
 
 \subsection{Réservation de Refuge}
+
+
+
+Ce module offre des fonctionnalités telles que la réservation de refuges, la vérification de l'identité des utilisateurs, et la suggestion de refuges alternatifs en cas d'annulation.
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{ReserverRefuge.jpg}\\[1cm] 
+    \caption{Annulation de réservation}
+    \label{fig:enter-label}
+\end{figure}
+
+
+
+\begin{enumerate}
+    
+    \item \textbf{Vérification de l'Identité de l'Utilisateur:} Avant d'effectuer une réservation, le programme vérifie l'existence de l'identifiant d'utilisateur (idUsr) dans la table \texttt{CompteUtilisateur}. Cela garantit que seuls les utilisateurs enregistrés peuvent effectuer des réservations.
+
+    \item \textbf{Vérification de l'Existence du Refuge:} Une vérification similaire est effectuée pour s'assurer que le refuge spécifié, identifié par son email, existe dans la table \texttt{Refuge}.
+
+    \item \textbf{Vérification de la Date et des Paramètres:} Le code vérifie la validité de la date de réservation et s'assure que le refuge est ouvert à cette date. De plus, il examine le nombre de nuits et le nombre de repas pour garantir la cohérence des réservations.
+
+    \item \textbf{Calcul du Prix et Insertion dans la Table de Réservation:} Le prix total de la réservation est calculé en interrogeant les tables \texttt{Refuge}, \texttt{Propose}, et \texttt{Repas}. Ensuite, une insertion est effectuée dans la table \texttt{ReservationRefuge}, et le montant dû dans la table \texttt{Utilisateur} est mis à jour.
+
+    \begin{lstlisting}[style=SQL, label=sql-e]
+INSERT INTO ReservationRefuge (dateResRefuge, heureResRefuge, nbNuitResRefuge, nbRepasResRefuge, prixResRefuge, email, idUsr) VALUES (?, ?, ?, ?, ?, ?, ?);
+UPDATE Utilisateur SET SommeDue = SommeDue + ? WHERE idUSr = ?
+    \end{lstlisting}
+
+    \item \textbf{Mise à Jour des Places Disponibles:} Les tables \texttt{Refuge} et \texttt{Propose} sont mises à jour pour refléter les nouvelles réservations et les places disponibles.
+
+    \item \textbf{Annulation de Réservation avec Suggestion de Refuges Alternatifs:} Lorsqu'une annulation de réservation est initiée, le programme vérifie d'abord l'existence de la réservation dans la table \texttt{ReservationRefuge}. En cas de succès, la réservation est supprimée, et des refuges alternatifs du même secteur géographique sont suggérés.
+    
+\end{enumerate}
+ 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{AnnulerReservation.jpg}\\[1cm]
+    \caption{Garantir l'intégrité des données}
+    \label{fig:enter-label}
+\end{figure}
+
+
+
+
 \subsection{Réservation de Formation}
 Pour la réservation d'une formation (et éventuelement l'annulation d'une réservation), il faut que l'utilisateur fournisse l'année et le rang qui identifient la formation (ou bien l'idReservationFormation pour l'annuler). Puis la fonctionnalité se réalise en suivant plusieurs étapes:
 \begin{enumerate}
@@ -116,6 +164,7 @@ UPDATE ReservationFormation SET rangAttente = rangAttente - 1 WHERE idReservatio
 Pour chacune de ces réservations, on insère dans un tableau Message de notre base de données un message qui signale le développement de la situation de leur réservation (Passage en liste principale par exemple). Et chaque utilisateur pourra lire ses messages lorsqu'il le souhaite comme une sorte de boîte mail.
 \end{enumerate}
 
+
 \subsection{Location et Retour de Matériel}
 La location et le retour du matériel sont des étapes clés du cahier des charges, et nous nous sommes efforcés de respecter les souhaits du client.
 
@@ -133,18 +182,20 @@ Une fois ces détails reçus, nous procédons à plusieurs vérifications pour g
     Pour évaluer la disponibilité des lots demandés par l'utilisateur, nous examinons les réservations existantes ainsi que le nombre total d'unités disponibles. En cas d'insuffisance d'unités, un message est immédiatement affiché à l'utilisateur, l'informant de la contrainte.
     Ceci grâce à la requête sql suivante (Les "?" remplaçant les informations fournies): \\
     \\
-        SELECT lm.modele,lm.marque,lm.annee,(lm.nbPieces - rp.nbPiecesReservees - rp.nbPiecesCasseesPerdues)
-                FROM ReservationPieces rp \\
-                JOIN  LotMateriel lm \\
-                ON rp.marque = lm.marque and rp.modele = lm.modele and rp.annee = lm.annee \\
-                JOIN LocationMateriel locm \\
-                ON rp.idLocationMateriel = locm.idLocationMateriel\\ 
-                WHERE locm.dateRetour >= ? and locm.dateRecup <= ? \\
-                UNION \\
-                SELECT lm.modele,lm.marque,lm.annee,lm.nbPieces \\
-                FROM LotMateriel lm \\
-                WHERE (lm.modele, lm.marque, lm.annee) NOT IN \\
-                ( SELECT rp.modele, rp.marque, rp.annee FROM ReservationPieces rp)\\
+    \begin{lstlisting}[style=SQL, label=sql-e]
+SELECT lm.modele,lm.marque,lm.annee,(lm.nbPieces - rp.nbPiecesReservees - rp.nbPiecesCasseesPerdues)
+FROM ReservationPieces rp
+JOIN  LotMateriel lm 
+ON rp.marque = lm.marque and rp.modele = lm.modele and rp.annee = lm.annee
+JOIN LocationMateriel locm
+ON rp.idLocationMateriel = locm.idLocationMateriel
+WHERE locm.dateRetour >= ? and locm.dateRecup <= ?
+UNION
+SELECT lm.modele,lm.marque,lm.annee,lm.nbPieces
+FROM LotMateriel lm 
+WHERE (lm.modele, lm.marque, lm.annee) NOT IN
+(SELECT rp.modele, rp.marque, rp.annee FROM ReservationPieces rp)
+    \end{lstlisting}
     La première section de cette requête examine la disponibilité en fonction des locations déjà effectuées. La deuxième section vise à s'assurer que l'utilisateur ne demande pas plus d'unités que celles disponibles en stock initial.
     \item La vérification de la durée de la location\\
     Tout d'abord, nous veillons à ce que l'utilisateur fournisse des dates valides, impliquant une date de récupération postérieure à la date actuelle et une date de retour postérieure à la date de récupération. Cette étape garantit l'intégrité chronologique du processus de location.
