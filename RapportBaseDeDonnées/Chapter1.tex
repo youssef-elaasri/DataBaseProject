@@ -84,7 +84,46 @@ Chaque table est conçue pour refléter les relations et les contraintes établi
 \subsection{Location et Retour de Matériel}
 La location et le retour du matériel sont des étapes clés du cahier des charges, et nous nous sommes efforcés de respecter les souhaits du client.
 
-Pour la location de matériel, l'utilisateur est requis de nous fournir le ou les lots qu'il souhaite réserver. Chaque lot de matériel est identifié par la marque, le modèle et l'année.
+Pour la location de matériel, l'utilisateur est requis de nous fournir le ou les lots qu'il souhaite réserver. En effet, l'utilisateur a la possibilité de louer plusieurs lots au sein d'une même réservation.
+
+ Chaque réservation est identifiée par un numéro unique, idLocationMateriel, propriété que nous avons ajoutée dans la table LocationMateriel pour faciliter la traçabilité de chaque transaction, y compris le retour du matériel.
+
+
+Chaque lot de matériel est identifié par la marque, le modèle et l'année.  L'utilisateur nous transmet ces informations, ainsi que le nombre d'unités qu'il souhaite louer, accompagné des dates de récupération et de retour de location.  
+
+Une fois ces détails reçus, nous procédons à plusieurs vérifications pour garantir que la location puisse être effectuée. Ces vérifications englobent divers critères.
+
+\begin{enumerate}
+    \item La vérification de la disponibilité du matériel\\
+    Pour évaluer la disponibilité des lots demandés par l'utilisateur, nous examinons les réservations existantes ainsi que le nombre total d'unités disponibles. En cas d'insuffisance d'unités, un message est immédiatement affiché à l'utilisateur, l'informant de la contrainte.
+    Ceci grâce à la requête sql suivante (Les "?" remplaçant les informations fournies): \\
+    \\
+        SELECT lm.modele,lm.marque,lm.annee,(lm.nbPieces - rp.nbPiecesReservees - rp.nbPiecesCasseesPerdues)
+                FROM ReservationPieces rp \\
+                JOIN  LotMateriel lm \\
+                ON rp.marque = lm.marque and rp.modele = lm.modele and rp.annee = lm.annee \\
+                JOIN LocationMateriel locm \\
+                ON rp.idLocationMateriel = locm.idLocationMateriel\\ 
+                WHERE locm.dateRetour >= ? and locm.dateRecup <= ? \\
+                UNION \\
+                SELECT lm.modele,lm.marque,lm.annee,lm.nbPieces \\
+                FROM LotMateriel lm \\
+                WHERE (lm.modele, lm.marque, lm.annee) NOT IN \\
+                ( SELECT rp.modele, rp.marque, rp.annee FROM ReservationPieces rp)\\
+    La première section de cette requête examine la disponibilité en fonction des locations déjà effectuées. La deuxième section vise à s'assurer que l'utilisateur ne demande pas plus d'unités que celles disponibles en stock initial.
+    \item La vérification de la durée de la location\\
+    Tout d'abord, nous veillons à ce que l'utilisateur fournisse des dates valides, impliquant une date de récupération postérieure à la date actuelle et une date de retour postérieure à la date de récupération. Cette étape garantit l'intégrité chronologique du processus de location.
+    
+    En parallèle, nous effectuons une vérification pour nous assurer que la durée de la location n'excède pas deux semaines. Cette limitation vise à répondre aux paramètres définis pour une gestion optimale des réservations. En cas de non-conformité à ces critères, des messages d'erreur sont générés pour guider l'utilisateur dans la soumission de dates adéquates.
+\end{enumerate}
+Une fois que toutes les vérifications ont été effectuées et que tout est conforme, la location est confirmée. Au moyen d'une requête SQL "INSERT INTO", les informations correspondantes sont ajoutées à la table LocationMateriel, ainsi qu'à la table ReservationsPieces pour assurer une gestion complète des réservations, y compris les détails spécifiques des pièces réservées.
+
+En ce qui concerne le retour de matériel, nous partons du principe que l'utilisateur effectue le retour dans les délais convenus. Il doit nous fournir les détails du lot qu'il souhaite retourner, ainsi que le nombre éventuel de pièces abîmées/perdues. En cas de pièces cassées, le cahier des charges nous oblige à les retirer du lot. Toutefois, pour assurer la traçabilité, ces pièces sont conservées dans le total du lot, c'est-à-dire dans la table LotMateriel, mais elles sont exclues du nombre de pièces disponibles pour les futures réservations.
+
+Par ailleurs, nous effectuons le calcul du coût des pièces endommagées, que nous ajoutons à la somme due par l'utilisateur dans la table Utilisateur. Cette approche garantit une gestion précise des retours, en tenant compte des dommages éventuels et de leur impact sur la facturation globale de l'utilisateur.
+
+
+
 
 
 

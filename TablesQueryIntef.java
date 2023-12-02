@@ -117,7 +117,8 @@ public class TablesQueryIntef {
             System.err.println("An error occurred while executing the SQL query: ");
         }
     }
-    public void deleteAll(String EmailUsrString) throws SQLException {
+
+    void deleteAll(String EmailUsrString) throws SQLException {
         try {
             // select the idusr
             conn.setAutoCommit(false);
@@ -135,6 +136,17 @@ public class TablesQueryIntef {
             }
             stmt.close();
             resultSet.close();
+
+            // select the idusr
+            conn.setAutoCommit(false);
+            pre_stmt = "select * from adherent where IDUSR = ? ";
+            stmt = conn.prepareStatement(pre_stmt);
+            stmt.setInt(1, idusr);
+            resultSet = stmt.executeQuery();
+            boolean isAdherent = resultSet.next();
+            stmt.close();
+            resultSet.close();
+
 
             // select the new idusr
             pre_stmt = "select max(idusr) from compteutilisateur ";
@@ -161,12 +173,14 @@ public class TablesQueryIntef {
             stmt.executeUpdate();
             stmt.close();
 
-            //add newIdUsr to adherent
-            pre_stmt = "insert into adherent values(?) ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setInt(1, newIdUsr);
-            stmt.executeUpdate();
-            stmt.close();
+            //add newIdUsr to adherent if the user was an adherent
+            if (isAdherent) {
+                pre_stmt = "insert into adherent values(?) ";
+                stmt = conn.prepareStatement(pre_stmt);
+                stmt.setInt(1, newIdUsr);
+                stmt.executeUpdate();
+                stmt.close();
+            }
 
             // change the idusr in reservationrefuge
             pre_stmt = "update reservationrefuge set idusr = ? where idusr = ? ";
@@ -192,12 +206,14 @@ public class TablesQueryIntef {
             stmt.executeUpdate();
             stmt.close();
 
-            //delete idusr from agherent
-            pre_stmt = "delete adherent where idusr = ? ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setInt(1, idusr);
-            stmt.executeUpdate();
-            stmt.close();
+            //delete idusr from adherent
+            if (isAdherent) {
+                pre_stmt = "delete adherent where idusr = ? ";
+                stmt = conn.prepareStatement(pre_stmt);
+                stmt.setInt(1, idusr);
+                stmt.executeUpdate();
+                stmt.close();
+            }
 
             //delete idusr from compteutilisateur
             pre_stmt = "delete compteutilisateur where idusr = ? ";
