@@ -116,7 +116,7 @@ Une fois ces détails reçus, nous procédons à plusieurs vérifications pour g
     
     En parallèle, nous effectuons une vérification pour nous assurer que la durée de la location n'excède pas deux semaines. Cette limitation vise à répondre aux paramètres définis pour une gestion optimale des réservations. En cas de non-conformité à ces critères, des messages d'erreur sont générés pour guider l'utilisateur dans la soumission de dates adéquates.
 \end{enumerate}
-Une fois que toutes les vérifications ont été effectuées et que tout est conforme, la location est confirmée. Au moyen d'une requête SQL "INSERT INTO", les informations correspondantes sont ajoutées à la table LocationMateriel, ainsi qu'à la table ReservationsPieces pour assurer une gestion complète des réservations, y compris les détails spécifiques des pièces réservées.
+Une fois que toutes les vérifications ont été effectuées et que tout est conforme, la location est confirmée. Au moyen d'une requête sql "INSERT INTO", les informations correspondantes sont ajoutées à la table LocationMateriel, ainsi qu'à la table ReservationsPieces pour assurer une gestion complète des réservations, y compris les détails spécifiques des pièces réservées.
 
 En ce qui concerne le retour de matériel, nous partons du principe que l'utilisateur effectue le retour dans les délais convenus. Il doit nous fournir les détails du lot qu'il souhaite retourner, ainsi que le nombre éventuel de pièces abîmées/perdues. En cas de pièces cassées, le cahier des charges nous oblige à les retirer du lot. Toutefois, pour assurer la traçabilité, ces pièces sont conservées dans le total du lot, c'est-à-dire dans la table LotMateriel, mais elles sont exclues du nombre de pièces disponibles pour les futures réservations.
 
