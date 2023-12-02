@@ -77,6 +77,25 @@ Chaque table est conçue pour refléter les relations et les contraintes établi
 \section{Analyse des Fonctionnalités}
 
 \subsection{Parcours des formations/refuges/matériels disponibles}
+
+\par Cette fonctionnalité permet aux adhérents d'accéder aux informations des lots de matériel disponibles, des formations proposées, ainsi que des refuges disponibles, offrant aux membres une expérience transparente lors de la réservation de matériel, de l'inscription à des formations ou de la planification de séjours en refuge.
+
+\begin{enumerate}
+
+\item \textbf{Lots de Matériel Disponibles}
+La méthode `showMaterielCat` permet aux membres du club de visualiser les lots de matériel disponibles. Pour ce faire, la base de données est interrogée pour récupérer des informations telles que le modèle, la marque, l'année, la catégorie, le nombre de pièces disponibles, et la date de péremption des articles. La complexité de cette requête réside dans la gestion des réservations et la vérification de la disponibilité des articles par rapport à leur date de péremption.
+ L'objectif est de permettre aux adhérents du club de visualiser les articles disponibles non seulement dans une catégorie spécifique, mais également dans toutes les sous-catégories associées de manière récursive.
+
+\item \textbf{Formations Offertes par le Club}
+La deuxième fonctionnalité concerne l'affichage des formations proposées par le club. La méthode `showCourses` récupère les informations essentielles sur les formations, telles que le nom de la formation, le type d'activité associé, la date de démarrage, la durée, et le nombre de places disponibles. Les résultats sont triés de manière à présenter une liste claire et ordonnée pour les adhérents.
+
+\item \textbf{Refuges Disponibles}
+Enfin, la troisième fonctionnalité offre aux adhérents la possibilité de visualiser les refuges disponibles. La méthode `showRefuge` permet de trier les refuges par le nom et offre deux options de tri supplémentaires : par dates de début et de fin de gardiennage, ou par le nombre de places disponibles. Cette flexibilité dans l'affichage garantit une meilleure expérience utilisateur, en permettant aux membres de choisir le tri qui correspond le mieux à leurs besoins.
+\end{enumerate}
+
+\par L'implémentation de cette base de données offre une solution complète et efficace pour répondre aux besoins des adhérents du club. La conception de requêtes SQL complexes, la gestion des réservations, la vérification des dates de péremption, et la flexibilité dans l'affichage des résultats ont été les principaux défis relevés. Cette fonctionnalité améliore significativement l'expérience des adhérents du club, en leur offrant un accès aux informations essentielles. 
+
+
 \subsection{Réservation de Refuge}
 \subsection{Réservation de Formation}
 Pour la réservation d'une formation (et éventuelement l'annulation d'une réservation), il faut que l'utilisateur fournisse l'année et le rang qui identifient la formation (ou bien l'idReservationFormation pour l'annuler). Puis la fonctionnalité se réalise en suivant plusieurs étapes:
