@@ -41,6 +41,13 @@ public class RetourMatInterf {
                 stmt.setInt(5, idLoc);
                 stmt.executeUpdate();
                 stmt.close();
+                String priceStatement = "UPDATE Utilisateur SET SommeDue = SommeDue + ? WHERE idUSr = ?";
+                PreparedStatement stmtPrice = conn.prepareStatement(priceStatement);
+                stmtPrice.setInt(1, this.calculPrix(nbPiecesCasseesPerdues,materiel));
+                stmtPrice.setInt(2, idUser);
+                ResultSet resultSetPrice = stmtPrice.executeQuery();
+                stmtPrice.close();
+                resultSetPrice.close();
             } else {
                 System.out.println("Utilisateur non trouvé. ");
             }
@@ -59,5 +66,20 @@ public class RetourMatInterf {
                 System.err.println("An error occurred while executing the SQL query 3.");
             }
         }
+    }
+
+    private int calculPrix(int nbPiecesCasseesPerdues, Lot materiel) throws SQLException{
+        String prestmt = "SELECT prix from LotMateriel WHERE marque = ? AND modele = ?" +
+                " AND annee = ?";
+        PreparedStatement stmt = conn.prepareStatement(prestmt);
+        stmt.setString(1, materiel.marque);
+        stmt.setString(2, materiel.modele);
+        stmt.setInt(3, materiel.annee);
+        ResultSet resultSet = stmt.executeQuery();
+        if (resultSet.next()) {
+            int res = resultSet.getInt(1);
+            return res*nbPiecesCasseesPerdues;
+        }
+       return 0;
     }
 }

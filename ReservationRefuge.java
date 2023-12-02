@@ -1,3 +1,4 @@
+import java.awt.desktop.SystemSleepEvent;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -27,19 +28,34 @@ public class ReservationRefuge {
             conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
             //System.out.println("connected");
             int nbrRepas = repas.length;
-
-            if(     verifyIdUsr(idUsr) &&
-                    verifyRefuge(emailRefuge) &&
-                    verifyDate(emailRefuge, date) &&
-                    verifyNbrNuitsRepas(emailRefuge, nuitsReserves, nbrRepas) &&
-                    verifyRepas(repas) ) {
-
-                int prix = calculPrix(emailRefuge, nuitsReserves,  repas);
-
-
-                insertQuery(nuitsReserves, nbrRepas, prix, emailRefuge, idUsr, date);
-
+            System.out.println("1");
+            if(!verifyIdUsr(idUsr)){
+                System.out.println("L'identifiant " + idUsr + " n'existe pas");
+                return;
             }
+            System.out.println("2");
+            if(!verifyRefuge(emailRefuge)){
+                System.out.println("Le refuge dont l'email est " + emailRefuge + " n'existe pas");
+                return;
+            }
+            System.out.println("3");
+            if(!verifyDate(emailRefuge, date, nuitsReserves)){
+                System.err.println("Le refuge sera fermé à cette date :(");
+                return;
+            }
+            System.out.println("4");
+            if(!verifyNbrNuitsRepas(emailRefuge, nuitsReserves, nbrRepas)){
+                return;
+            }
+            System.out.println("5");
+            if(!verifyRepas(repas)){
+                System.out.println("Un repas n'est pas valide!");
+                return;
+            }
+            System.out.println("6");
+            int prix = calculPrix(emailRefuge, nuitsReserves,  repas);
+            insertQuery(nuitsReserves, nbrRepas, prix, emailRefuge, idUsr, date);
+
             conn.close();
             return;
 
@@ -50,42 +66,137 @@ public class ReservationRefuge {
         }
     }
 
-    private void insertQuery(int nuitsReserves, int nbrRepas, int prix, String email, int idUsr, String date) throws SQLException {
-        if (prix == -1){
-            return ;
+    public ReservationRefuge(int iDRefuge){
+        try {
+            // Registering the Oracle driver
+            DriverManager.registerDriver(new oracle.jdbc.driver.OracleDriver());
+
+            // Establishing the connection
+            conn = DriverManager.getConnection(CONN_URL, USER, PASSWD);
+
+            if(verifyIdRefuge(iDRefuge)){
+                String sectionGeo = deleteQuery(iDRefuge);
+                suggestRefuge(sectionGeo);
+            }
+        } catch (SQLException e) {
+            System.err.println("failed");
+            e.printStackTrace(System.err);
         }
 
-        //java.sql.Date today = java.sql.Date.valueOf(LocalDate.now()) ;
-        // Get the current time
-        LocalTime currentTime = LocalTime.now();
-
-        // Get the current hour
-        int currentHour = currentTime.getHour();
+    }
 
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private Boolean verifyIdRefuge(int iDRefuge) throws SQLException {
 
-        java.sql.Date sqlDate = java.sql.Date.valueOf(LocalDate.parse(date, formatter)) ;
+        String refugeExistenceStatement = "SELECT COUNT(*) FROM RESERVATIONREFUGE WHERE IDRESREFUGE = ?";
+        PreparedStatement stmt = conn.prepareStatement((refugeExistenceStatement));
+        stmt.setInt(1, iDRefuge);
+        ResultSet result = stmt.executeQuery();
+        if (result.next()) {
+            if (result.getInt(1) > 0) {
+                stmt.close();
+                result.close();
+                return true;
+            }
+            System.out.println("cet ID " + iDRefuge + " N'existe pas");
+        }
+
+        stmt.close();
+        result.close();
+
+        return false;
+    }
 
 
-        String prestmnt = "INSERT INTO ReservationRefuge (dateResRefuge, heureResRefuge," +
-                "nbNuitResRefuge, nbRepasResRefuge, prixResRefuge, email, idUsr) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        PreparedStatement stmnt = conn.prepareStatement(prestmnt);
-        stmnt.setDate(1, sqlDate);
-        stmnt.setInt(2, currentHour);
-        stmnt.setInt(3, nuitsReserves);
-        stmnt.setInt(4, nbrRepas);
-        stmnt.setInt(5, prix);
-        stmnt.setString(6, email);
-        stmnt.setInt(7, idUsr);
+    private String deleteQuery(int iDRefuge) throws SQLException {
+        try {
+            String sectionGeoExistenceStatement = "SELECT secteurGeo from (RESERVATIONREFUGE join Refuge R on R.email = RESERVATIONREFUGE.email) where ReservationRefuge.idResRefuge = ?";
+            PreparedStatement stmt = conn.prepareStatement((sectionGeoExistenceStatement));
+            stmt.setInt(1, iDRefuge);
+            ResultSet result = stmt.executeQuery();
+            //stmt.close();
+            if (result.next()) {
+                String sectionGeo = result.getString(1);
+                String prestmnt = "DELETE FROM RESERVATIONREFUGE where idResRefuge = ?";
+                PreparedStatement stmt2 = conn.prepareStatement(prestmnt);
+                stmt2.setInt(1, iDRefuge);
+                stmt2.execute();
+                stmt2.close();
 
-        stmnt.execute();
+                return sectionGeo;
+            }
+            System.err.println("failed");
+            return "ERROR";
+        }catch(SQLException e){
+            System.err.println("failed");
+            return "ERROR";
+        }
+    }
+
+    private void suggestRefuge(String sectionGeo) throws SQLException {
+        if(sectionGeo.equals("ERROR")){
+            System.out.println("there is an error somewhere");
+        }
+        System.out.println(sectionGeo);
+        String prestmt = "SELECT nomRefuge FROM Refuge where secteurGeo = ?";
+        PreparedStatement stmt = conn.prepareStatement(prestmt);
+        stmt.setString(1,sectionGeo);
+        ResultSet result = stmt.executeQuery();
+        System.out.print("Tu peux aussi aller aux refuges suivants: ");
+        while(result.next()){
+
+            System.out.print(result.getString(1) + " ");
+        }
+        System.out.print("\n");
+    }
 
 
+    private void insertQuery(int nuitsReserves, int nbrRepas, int prix, String email, int idUsr, String date) throws SQLException {
+        try {
+            conn.setAutoCommit(false);
+            if (prix == -1) {
+                return;
+            }
 
+            // Get the current time
+            LocalTime currentTime = LocalTime.now();
 
+            // Get the current hour
+            int currentHour = currentTime.getHour();
 
+            // Format the date
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            java.sql.Date sqlDate = java.sql.Date.valueOf(LocalDate.parse(date, formatter));
+
+            // Prepare the SQL statement for inserting the reservation
+            String prestmnt = "INSERT INTO ReservationRefuge (dateResRefuge, heureResRefuge," +
+                    "nbNuitResRefuge, nbRepasResRefuge, prixResRefuge, email, idUsr) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement stmnt = conn.prepareStatement(prestmnt);
+            stmnt.setDate(1, sqlDate);
+            stmnt.setInt(2, currentHour);
+            stmnt.setInt(3, nuitsReserves);
+            stmnt.setInt(4, nbrRepas);
+            stmnt.setInt(5, prix);
+            stmnt.setString(6, email);
+            stmnt.setInt(7, idUsr);
+
+            // Execute the insertion query
+            stmnt.execute();
+
+            prestmnt = "UPDATE Utilisateur SET SommeDue = SommeDue + ? WHERE idUSr = ?";
+            stmnt = conn.prepareStatement(prestmnt);
+            stmnt.setInt(1, prix);
+            stmnt.setInt(2, idUsr);
+
+            stmnt.execute();
+
+        } catch (SQLException e) {
+            System.out.println("Failed");
+            conn.rollback();
+        } finally {
+            conn.setAutoCommit(true);
+        }
     }
     private int calculPrix(String  emailRefuge, int nuitsReserves, String ... repas) throws SQLException {
         int prixReservationNuits = 0;
@@ -138,7 +249,6 @@ public class ReservationRefuge {
                 result.close();
                 return true;
             }
-            System.out.println("L'identifiant " + idUsr + " n'existe pas");
         }
 
         stmt.close();
@@ -157,8 +267,6 @@ public class ReservationRefuge {
                 result.close();
                 return true;
             }
-            System.out.println("Le refuge dont l'email est " + emailRefuge + " n'existe pas");
-
         }
         return false;
     }
@@ -206,7 +314,7 @@ public class ReservationRefuge {
         return false;
     }
 
-    private Boolean verifyDate(String  emailRefuge, String date) throws SQLException {
+    private Boolean verifyDate(String  emailRefuge, String date, int nuits) throws SQLException {
         //LocalDate datee = date.toLocalDate();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -223,17 +331,9 @@ public class ReservationRefuge {
             LocalDate ouverture = result.getDate(1).toLocalDate();
             LocalDate fermeture = result.getDate(2).toLocalDate();
             if(fermeture.isBefore(ouverture)) fermeture = fermeture.plusYears(1);
-
-            System.out.println(localDate.isAfter(ouverture));
-            System.out.println(localDate.isBefore(fermeture));
-
-            System.out.println(localDate);
-
-
-
             stmntDate.close();
             result.close();
-            return localDate.isAfter(ouverture) && localDate.isBefore(fermeture); //TODO no such example
+            return localDate.isAfter(ouverture) && localDate.plusDays(nuits).isBefore(fermeture); //TODO no such example
         }
 
         return false;
@@ -241,13 +341,9 @@ public class ReservationRefuge {
     private Boolean verifyRepas(String ... repas){
         for (String unRepas : repas){
             if(!Repas.contains(unRepas)){
-                System.out.println(unRepas + " n'est pas un repas valide");
                 return false;
             }
         }
         return true;
     }
-    /*public static void main(String[] args) {
-        new ReservationRefuge(1, "refuge1@gmail.com", 1, "diner", "diner", "souper");
-    }*/
 }
