@@ -36,41 +36,40 @@ public class Tablesquery {
             throw new RuntimeException(e);
         }
     }
+    // Méthode pour vérifier le mot de passe d'un utilisateur en fonction de son email
     boolean verifyPassword(String email, String password) throws SQLException {
-        String pre_stmt = "select pwdusr from utilisateur where emailusr = ?";
-        PreparedStatement stmt = conn.prepareStatement(pre_stmt);
-        stmt.setString(1, email);
-        ResultSet resultSet = stmt.executeQuery();
-        if (resultSet.next()) {
-            String addedPassword = resultSet.getString(1);
-            stmt.close();
-            resultSet.close();
-            return addedPassword.equals( password);
-        }
-        else {
-            System.out.println("email not found");
-            stmt.close();
-            resultSet.close();
-            return false;
-        }
-    }
-
-    void showCourses()  {
         try {
-            String pre_stmt = "select distinct nomformation, apa.typeactivite, datedemarrage, dureeformation, nbplacesformation " +
-                    "from formation f " +
-                    "join a_pour_activite apa " +
-                    "on f.annee = apa.annee and f.rang = apa.rang " +
-                    "order by datedemarrage, nomformation ";
+            // Requête SQL pour récupérer le mot de passe de l'utilisateur à partir de son email
+            String pre_stmt = "select pwdusr from utilisateur where emailusr = ?";
+            // Préparation de la requête SQL avec un PreparedStatement pour éviter les attaques par injection SQL
             PreparedStatement stmt = conn.prepareStatement(pre_stmt);
+            // Paramètre la valeur de l'email dans la requête SQL
+            stmt.setString(1, email);
+            // Exécute la requête SQL et récupère le résultat dans un ResultSet
             ResultSet resultSet = stmt.executeQuery();
-            getTableData(resultSet);
-            stmt.close();
-            resultSet.close();
+            // Vérifie si l'email existe dans la base de données
+            if (resultSet.next()) {
+                // Récupère le mot de passe stocké dans la base de données
+                String addedPassword = resultSet.getString(1);
+                // Ferme la connexion et le ResultSet
+                stmt.close();
+                resultSet.close();
+                // Compare le mot de passe fourni avec celui stocké dans la base de données
+                return addedPassword.equals(password);
+            } else {
+                // Affiche un message si l'email n'est pas trouvé
+                System.out.println("Email non trouvé");
+                // Ferme la connexion et le ResultSet
+                stmt.close();
+                resultSet.close();
+                // Renvoie false car l'email n'est pas trouvé
+                return false;
+            }
         } catch (SQLException e) {
-            System.err.println("An error occurred while executing the SQL query: ");
+            // Gestion des erreurs SQL
+            System.err.println("\"Une erreur s'est produite lors de l'exécution de la requête SQL");
         }
-
+        return false;
     }
 
 
@@ -108,27 +107,7 @@ public class Tablesquery {
             System.err.println("An error occurred while executing the SQL query: ");
         }
     }
-    void showMaterielAct(String activity) {
-        try {
-            String pre_stmt = "SELECT DISTINCT lm.modele, lm.marque, lm.annee " +
-                    "FROM lotmateriel lm  " +
-                    "JOIN utilise u ON lm.modele = u.modele AND lm.marque = u.marque AND lm.annee = u.annee " +
-                    "WHERE u.typeactivite = ? AND lm.nbpieces > 0 " +
-                    "MINUS " +
-                    "SELECT DISTINCT lm.modele, lm.marque, lm.annee " +
-                    "FROM lotmateriel lm " +
-                    "JOIN a_pour_dateperemption apd ON lm.modele = apd.modele AND lm.marque = apd.marque AND lm.annee = apd.annee " +
-                    "where apd.dateperemption < SYSDATE ";
-            PreparedStatement stmt = conn.prepareStatement(pre_stmt);
-            stmt.setString(1, activity);
-            ResultSet resultSet = stmt.executeQuery();
-            getTableData(resultSet);
-            stmt.close();
-            resultSet.close();
-        } catch (SQLException e) {
-            System.err.println("An error occurred while executing the SQL query: ");
-        }
-    }
+
     /*
     * @param option : takes true if we want to order the table by  refuge's name and dates
     *                 takes false if we want to order the table by  refuge's name and available places
@@ -178,6 +157,17 @@ public class Tablesquery {
             stmt.close();
             resultSet.close();
 
+            // select the idusr
+            conn.setAutoCommit(false);
+            pre_stmt = "select * from adherent where IDUSR = ? ";
+            stmt = conn.prepareStatement(pre_stmt);
+            stmt.setInt(1, idusr);
+            resultSet = stmt.executeQuery();
+            boolean isAdherent = resultSet.next();
+            stmt.close();
+            resultSet.close();
+
+
             // select the new idusr
             pre_stmt = "select max(idusr) from compteutilisateur ";
             conn.setAutoCommit(false);
@@ -203,12 +193,14 @@ public class Tablesquery {
             stmt.executeUpdate();
             stmt.close();
 
-            //add newIdUsr to adherent
-            pre_stmt = "insert into adherent values(?) ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setInt(1, newIdUsr);
-            stmt.executeUpdate();
-            stmt.close();
+            //add newIdUsr to adherent if the user was an adherent
+            if (isAdherent) {
+                pre_stmt = "insert into adherent values(?) ";
+                stmt = conn.prepareStatement(pre_stmt);
+                stmt.setInt(1, newIdUsr);
+                stmt.executeUpdate();
+                stmt.close();
+            }
 
             // change the idusr in reservationrefuge
             pre_stmt = "update reservationrefuge set idusr = ? where idusr = ? ";
@@ -234,12 +226,14 @@ public class Tablesquery {
             stmt.executeUpdate();
             stmt.close();
 
-            //delete idusr from agherent
-            pre_stmt = "delete adherent where idusr = ? ";
-            stmt = conn.prepareStatement(pre_stmt);
-            stmt.setInt(1, idusr);
-            stmt.executeUpdate();
-            stmt.close();
+            //delete idusr from adherent
+            if (isAdherent) {
+                pre_stmt = "delete adherent where idusr = ? ";
+                stmt = conn.prepareStatement(pre_stmt);
+                stmt.setInt(1, idusr);
+                stmt.executeUpdate();
+                stmt.close();
+            }
 
             //delete idusr from compteutilisateur
             pre_stmt = "delete compteutilisateur where idusr = ? ";
