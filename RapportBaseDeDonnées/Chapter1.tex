@@ -71,11 +71,11 @@ Le modèle relationnel de la base de données reflète la structure définie dan
 \item    DatePeremption : La table \textbf{DatePeremption} stocke les dates de péremption associées aux lots de matériel, liées par la table \textbf{A\_pour\_datePeremption}.
 \end{enumerate}
 
-On obtient ainsi le shèma relationnel suivant:\\
+On obtient ainsi le schéma relationnel suivant:\\
 \textbf{CompteUtilisateur}( \underline{idUsr} )\\
 \textbf{Utilisateur}( \underline{emailUsr}, pwdUsr, nomUsr, prenomUsr, adressUsr, idUsr, sommeDue, sommeRemboursee)\\
 \textbf{Adherent}( \underline{idUsr} )\\
-\textbf{Refuge}(\underline{email}, nimRefuge, secteurGeo, dateOuverture, dateFermeture, nbPlacesRepas, nbPlacesDormir, texteRepresentatif, typePaiement, prixNuitee)\\
+\textbf{Refuge}(\underline{email}, nomRefuge, secteurGeo, dateOuverture, dateFermeture, nbPlacesRepas, nbPlacesDormir, texteRepresentatif, typePaiement, prixNuitee)\\
 \textbf{RefNumTel}( \underline{numTel}, email)\\
 \textbf{ReservationRefuge}( \underline{idResRefuge}, dateResRefuge, heureResRefuge, nbNuitResRefuge, nbRepasResRefuge, prixResRefuge, email, idUsr)\\
 \textbf{Repas}( \underline{repas} )\\
@@ -98,7 +98,7 @@ On obtient ainsi le shèma relationnel suivant:\\
 Chaque table est conçue pour refléter les relations et les contraintes établies lors de la phase de conception, garantissant ainsi une représentation cohérente des données du projet.
 
 \subsection{Formes Normales}
-
+Toutes les tables du schéma relationnel suivent la forme normale de Boyce-Codd-Kent. En effet, il n'y a pas de dépendance non triviale dont la partie gauche n'est pas une clef.
 \section{Analyse des Fonctionnalités}
 
 \subsection{Parcours des formations/refuges/matériels disponibles}
@@ -173,19 +173,34 @@ UPDATE Utilisateur SET SommeDue = SommeDue + ? WHERE idUSr = ?
 \subsection{Réservation de Formation}
 Pour la réservation d'une formation (et éventuelement l'annulation d'une réservation), il faut que l'utilisateur fournisse l'année et le rang qui identifient la formation (ou bien l'idReservationFormation pour l'annuler). Puis la fonctionnalité se réalise en suivant plusieurs étapes:
 \begin{enumerate}
-    \item L’Analyse des réservations qui existent déjà:\\
-Cette étape est nécessaire pour savoir l'état de la formation que l'on veut réserver: si elle est pleine ou pas. Ainsi, il faut calculer le nombre de réservations déja effectués, en utilisant la requête : SELECT COUNT(*) FROM ReservationFormation WHERE annee = ? AND rang = ? AND rangAttente = 0;\\
-Puis, on compare ce résultat avec le nombre de places que la formation offre. Et si, la formation est déjà pleine. La réservation sera mise en liste d'attente et son rang sera calculer par la requête : SELECT * FROM ReservationFormation WHERE annee = ? AND rang = ? AND rangAttente >= 1;\\
+    \item \textbf{L’analyse des réservations qui existent déjà:}\\
+Cette étape est nécessaire pour savoir l'état de la formation que l'on veut réserver: si elle est pleine ou pas. Ainsi, il faut calculer le nombre de réservations déja effectués, en utilisant la requête : 
+    \begin{lstlisting}[style=SQL, label=sql-e]
+SELECT COUNT(*) FROM ReservationFormation WHERE annee = ? AND rang = ? AND rangAttente = 0;
+\end{lstlisting}
+Puis, on compare ce résultat avec le nombre de places que la formation offre. Et si, la formation est déjà pleine, la réservation sera mise en liste d'attente et son rang sera calculé par la requête :
+\begin{lstlisting}[style=SQL, label=sql-e]
+ SELECT * FROM ReservationFormation WHERE annee = ? AND rang = ? AND rangAttente >= 1;
+    \end{lstlisting}
 
-    \item L’Insertion de la réservation:\\
-En tenant compte de l'analyse qu'on vient de faire, on doit passer à l'insertion de la réservation dans notre base de données. Mais un problème s'est posé lors de notre 1ère approche. Puisqu'on doit renvoyer à l'utilisateur l'id de sa réservation pour qu'il puisse l'annuler après s'il veut. En mettant en place une séquence qui génère automatiquement les identifiants, il sera difficile de connaître l'id qui a été utilisé (un utilisateur peut réserver la même formation plusieurs fois...). Ainsi, on choisit les identifiants manuellement, en utilisant les requêtes suivantes: SELECT MAX(idReservationFormation) FROM ReservationFormation;\\
-INSERT INTO ReservationFormation(idReservationFormation, rangAttente, annee,rang, idUsr) VALUES (?, ?, ?, ?, ?);\\
-Avec (dans le cas où la réservation est mise dans la liste d'attente): rangAttente = taille de la hashMap où on stocke les réservations en liste d'attente + 1. (On  va plus détailler sur le choix de la hashMap dans la partie qui suit car elle n'est pas réellement utilisé que dans le cas d'une annulation)
+    \item \textbf{L’insertion de la réservation:}\\
+En tenant compte de l'analyse qu'on vient de faire, on doit passer à l'insertion de la réservation dans notre base de données. Mais un problème s'est posé lors de notre 1ère approche. Puisqu'on doit renvoyer à l'utilisateur l'id de sa réservation pour qu'il puisse l'annuler après s'il veut. En mettant en place une séquence qui génère automatiquement les identifiants, il sera difficile de connaître l'id qui a été utilisé (un utilisateur peut réserver la même formation plusieurs fois...). Ainsi, on choisit les identifiants manuellement, en utilisant les requêtes suivantes: 
+\begin{lstlisting}[style=SQL, label=sql-e]
+SELECT MAX(idReservationFormation) FROM ReservationFormation;
+INSERT INTO ReservationFormation(idReservationFormation, rangAttente, annee,rang, idUsr) VALUES (?, ?, ?, ?, ?);
+\end{lstlisting}
+Avec (dans le cas où la réservation est mise dans la liste d'attente): rangAttente = taille de la hashMap où on stocke les réservations en liste d'attente + 1. (On  va plus détailler sur le choix de la hashMap dans la partie qui suit car elle n'est réellement utilisée que dans le cas d'une annulation)
 
-    \item L’annulation d’une réservation:\\
-Dans le cas où l'utilisateur souhaite annuler sa réservation, on crée une HashMap qui contient les réservations qui sont aussi en liste d'attente mais qui ont un rangAttente supérieur à celui de la réservation qu'on veut annuler (clé = idReservationFormation et valeur = rangAttente), car c'est eux qui seront touchées par cette annulation. Puis, on supprime la réservation de la base de données par : DELETE FROM ReservationFormation WHERE idReservationFormation = ?;\\
+    \item \textbf{L’annulation d’une réservation:}\\
+Dans le cas où l'utilisateur souhaite annuler sa réservation, on crée une HashMap qui contient les réservations qui sont aussi en liste d'attente mais qui ont un rangAttente supérieur à celui de la réservation qu'on veut annuler (clé = idReservationFormation et valeur = rangAttente), car c'est eux qui seront touchées par cette annulation. Puis, on supprime la réservation de la base de données par : 
+\begin{lstlisting}[style=SQL, label=sql-e]
+DELETE FROM ReservationFormation WHERE idReservationFormation = ?;
+\end{lstlisting}
 Et pour chaque réservation dans la hashMap, on decrémente son rangAttente par 1 en utilisant la requête :
-UPDATE ReservationFormation SET rangAttente = rangAttente - 1 WHERE idReservationFormation = ?;\\
+\begin{lstlisting}[style=SQL, label=sql-e]
+UPDATE ReservationFormation SET rangAttente = rangAttente - 1 WHERE idReservationFormation = ?;
+\end{lstlisting}
+
 Pour chacune de ces réservations, on insère dans un tableau Message de notre base de données un message qui signale le développement de la situation de leur réservation (Passage en liste principale par exemple). Et chaque utilisateur pourra lire ses messages lorsqu'il le souhaite comme une sorte de boîte mail.
 \end{enumerate}
 
@@ -203,7 +218,7 @@ Chaque lot de matériel est identifié par la marque, le modèle et l'année.  L
 Une fois ces détails reçus, nous procédons à plusieurs vérifications pour garantir que la location puisse être effectuée. Ces vérifications englobent divers critères.
 
 \begin{enumerate}
-    \item La vérification de la disponibilité du matériel\\
+    \item \textbf{La vérification de la disponibilité du matériel}\\
     Pour évaluer la disponibilité des lots demandés par l'utilisateur, nous examinons les réservations existantes ainsi que le nombre total d'unités disponibles. En cas d'insuffisance d'unités, un message est immédiatement affiché à l'utilisateur, l'informant de la contrainte.
     Ceci grâce à la requête sql suivante (Les "?" remplaçant les informations fournies): \\
     \\
@@ -222,7 +237,7 @@ WHERE (lm.modele, lm.marque, lm.annee) NOT IN
 (SELECT rp.modele, rp.marque, rp.annee FROM ReservationPieces rp)
     \end{lstlisting}
     La première section de cette requête examine la disponibilité en fonction des locations déjà effectuées. La deuxième section vise à s'assurer que l'utilisateur ne demande pas plus d'unités que celles disponibles en stock initial.
-    \item La vérification de la durée de la location\\
+    \item \textbf{La vérification de la durée de la location}\\
     Tout d'abord, nous veillons à ce que l'utilisateur fournisse des dates valides, impliquant une date de récupération postérieure à la date actuelle et une date de retour postérieure à la date de récupération. Cette étape garantit l'intégrité chronologique du processus de location.
     
     En parallèle, nous effectuons une vérification pour nous assurer que la durée de la location n'excède pas deux semaines. Cette limitation vise à répondre aux paramètres définis pour une gestion optimale des réservations. En cas de non-conformité à ces critères, des messages d'erreur sont générés pour guider l'utilisateur dans la soumission de dates adéquates.
@@ -235,6 +250,8 @@ Par ailleurs, nous effectuons le calcul du coût des pièces endommagées, que n
 
 
 \section{Droit d'oubli}
+
+\section{Guide d'emploi de l'interface textuelle}
 
 
 
