@@ -251,6 +251,16 @@ Par ailleurs, nous effectuons le calcul du coût des pièces endommagées, que n
 
 \section{Droit d'oubli}
 
+Dans le cadre de la mise en œuvre du droit à l'oubli au sein de notre système de gestion, nous avons développé un processus en huit étapes visant à garantir la suppression complète des données d'un utilisateur tout en préservant l'intégrité des relations au sein de la base de données.
+
+La première étape consiste à supprimer toutes les données liées à l'utilisateur, assurant ainsi une élimination exhaustive des informations sensibles. Par la suite, nous générons un nouveau ID utilisateur, l'ajoutons à la table CompteUtilisateur, ainsi qu'à la table EstAdherent, permettant ainsi une reconstruction sécurisée de l'identité de l'utilisateur dans ces contextes.
+
+Les étapes suivantes impliquent la modification des ID utilisateur dans les tables RéservationRefuge, ReservationFormation et LocationMatériel, afin de refléter le nouveau lien avec le compte utilisateur généré. Cette démarche garantit la cohérence des références croisées au sein de notre base de données.
+
+La septième étape vise à éliminer toute trace de l'ancien ID de l'utilisateur de la table EstAdherent, assurant ainsi une dissociation complète avec les adhérences précédentes. Enfin, dans la huitième étape, nous supprimons définitivement l'ancien ID utilisateur de la table CompteUtilisateur, concluant ainsi le processus du droit à l'oubli.
+
+Ce processus rigoureux assure la conformité avec les réglementations de protection des données en vigueur, garantissant la confidentialité et la sécurité des informations personnelles tout en respectant le droit de chaque utilisateur à l'oubli.
+
 \section{Guide d'emploi de l'interface textuelle}
 
 
